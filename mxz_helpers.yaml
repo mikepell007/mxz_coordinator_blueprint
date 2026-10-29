@@ -1,0 +1,37 @@
+# Helpers the blueprint reads. Either drop this file in your packages folder
+# (homeassistant: packages: !include_dir_named packages) or create the same
+# helpers in Settings -> Devices & services -> Helpers. Add a target and an
+# enable for each room you set up; °C users: min 10, max 31, step 0.5.
+input_boolean:
+  mxz_enable:
+    name: MXZ coordinator enable
+    icon: mdi:hvac
+  mxz_living_room_enable:
+    name: MXZ Living Room enable
+  mxz_bedroom_enable:
+    name: MXZ Bedroom enable
+
+input_select:
+  # The shared mode. Options must be exactly heat and cool.
+  mxz_mode:
+    name: MXZ shared mode
+    icon: mdi:sun-snowflake-variant
+    options:
+      - cool
+      - heat
+
+input_number:
+  mxz_living_room_target:
+    name: MXZ Living Room target
+    min: 55
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    mode: box
+  mxz_bedroom_target:
+    name: MXZ Bedroom target
+    min: 55
+    max: 85
+    step: 1
+    unit_of_measurement: "°F"
+    mode: box

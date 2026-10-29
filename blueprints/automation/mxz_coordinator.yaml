@@ -1,0 +1,782 @@
+blueprint:
+  name: MXZ Coordinator (cloud heads)
+  description: >-
+    One shared heat or cool mode for the heads on a Mitsubishi multi-split outdoor
+    unit, decided from your room sensors. Rooms that want the other mode wait, the
+    first room wins a standoff, and a room that reaches target steps aside.
+    Ported from the core logic of the MXZ Coordinator integration
+    (github.com/dkpnw/ha-mxz-coordinator) for heads reached through a cloud
+    integration. Settings are in °F; on a °C system use about half for every band.
+
+
+    **Up to six rooms.** Each room's head, temperature sensor, target, and enable
+    are picked together in its own section. Room 1 has the highest priority;
+    rooms 1 and 2 are required, and 3 to 6 are optional.
+
+
+    Create an input_select with exactly the options `heat` and `cool` for the
+    shared mode. You can also pick a mode on it yourself; the wait between
+    switches restarts from that change.
+  domain: automation
+  homeassistant:
+    min_version: 2024.10.0
+  input:
+    room_1:
+      name: Room 1
+      icon: mdi:numeric-1-box-outline
+      description: "Highest priority: wins a heat-versus-cool standoff."
+      input:
+        room_1_head:
+          name: Room 1 head
+          description: The room's indoor unit.
+          selector:
+            entity:
+              domain: climate
+        room_1_sensor:
+          name: Room 1 temperature sensor
+          description: The sensor the room runs on.
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+        room_1_target:
+          name: Room 1 target
+          description: An input_number holding the room's target.
+          selector:
+            entity:
+              domain: input_number
+        room_1_enable:
+          name: Room 1 enable
+          description: An input_boolean that turns the room on or off.
+          selector:
+            entity:
+              domain: input_boolean
+    room_2:
+      name: Room 2
+      icon: mdi:numeric-2-box-outline
+      description: Priority 2.
+      input:
+        room_2_head:
+          name: Room 2 head
+          description: The room's indoor unit.
+          selector:
+            entity:
+              domain: climate
+        room_2_sensor:
+          name: Room 2 temperature sensor
+          description: The sensor the room runs on.
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+        room_2_target:
+          name: Room 2 target
+          description: An input_number holding the room's target.
+          selector:
+            entity:
+              domain: input_number
+        room_2_enable:
+          name: Room 2 enable
+          description: An input_boolean that turns the room on or off.
+          selector:
+            entity:
+              domain: input_boolean
+    room_3:
+      name: Room 3
+      icon: mdi:numeric-3-box-outline
+      description: Priority 3. Optional; leave all four blank to skip it.
+      collapsed: true
+      input:
+        room_3_head:
+          name: Room 3 head
+          description: The room's indoor unit.
+          default: ""
+          selector:
+            entity:
+              domain: climate
+        room_3_sensor:
+          name: Room 3 temperature sensor
+          description: The sensor the room runs on.
+          default: ""
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+        room_3_target:
+          name: Room 3 target
+          description: An input_number holding the room's target.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_3_enable:
+          name: Room 3 enable
+          description: An input_boolean that turns the room on or off.
+          default: ""
+          selector:
+            entity:
+              domain: input_boolean
+    room_4:
+      name: Room 4
+      icon: mdi:numeric-4-box-outline
+      description: Priority 4. Optional; leave all four blank to skip it.
+      collapsed: true
+      input:
+        room_4_head:
+          name: Room 4 head
+          description: The room's indoor unit.
+          default: ""
+          selector:
+            entity:
+              domain: climate
+        room_4_sensor:
+          name: Room 4 temperature sensor
+          description: The sensor the room runs on.
+          default: ""
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+        room_4_target:
+          name: Room 4 target
+          description: An input_number holding the room's target.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_4_enable:
+          name: Room 4 enable
+          description: An input_boolean that turns the room on or off.
+          default: ""
+          selector:
+            entity:
+              domain: input_boolean
+    room_5:
+      name: Room 5
+      icon: mdi:numeric-5-box-outline
+      description: Priority 5. Optional; leave all four blank to skip it.
+      collapsed: true
+      input:
+        room_5_head:
+          name: Room 5 head
+          description: The room's indoor unit.
+          default: ""
+          selector:
+            entity:
+              domain: climate
+        room_5_sensor:
+          name: Room 5 temperature sensor
+          description: The sensor the room runs on.
+          default: ""
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+        room_5_target:
+          name: Room 5 target
+          description: An input_number holding the room's target.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_5_enable:
+          name: Room 5 enable
+          description: An input_boolean that turns the room on or off.
+          default: ""
+          selector:
+            entity:
+              domain: input_boolean
+    room_6:
+      name: Room 6
+      icon: mdi:numeric-6-box-outline
+      description: Priority 6. Optional; leave all four blank to skip it.
+      collapsed: true
+      input:
+        room_6_head:
+          name: Room 6 head
+          description: The room's indoor unit.
+          default: ""
+          selector:
+            entity:
+              domain: climate
+        room_6_sensor:
+          name: Room 6 temperature sensor
+          description: The sensor the room runs on.
+          default: ""
+          selector:
+            entity:
+              domain: sensor
+              device_class: temperature
+        room_6_target:
+          name: Room 6 target
+          description: An input_number holding the room's target.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_6_enable:
+          name: Room 6 enable
+          description: An input_boolean that turns the room on or off.
+          default: ""
+          selector:
+            entity:
+              domain: input_boolean
+    control:
+      name: Coordinator
+      icon: mdi:hvac
+      input:
+        coordinator_enable:
+          name: Coordinator enable
+          description: Off hands the heads back; they keep their last state.
+          selector:
+            entity:
+              domain: input_boolean
+        mode_helper:
+          name: Shared mode helper
+          description: An input_select with the options heat and cool.
+          selector:
+            entity:
+              domain: input_select
+    comfort:
+      name: Comfort
+      icon: mdi:thermometer
+      input:
+        drift:
+          name: Allowed drift
+          description: How far a satisfied room coasts before it runs again.
+          default: 1.0
+          selector:
+            number: {min: 0.5, max: 5, step: 0.5, unit_of_measurement: "°"}
+        demand_threshold:
+          name: Mode switch threshold
+          description: How far off target a room must be to ask for heat or cool.
+          default: 3.0
+          selector:
+            number: {min: 0.5, max: 10, step: 0.5, unit_of_measurement: "°"}
+        min_switch_seconds:
+          name: Minimum time between mode switches
+          default: 600
+          selector:
+            number: {min: 0, max: 7200, step: 60, unit_of_measurement: s}
+        resting_mode:
+          name: Resting mode
+          description: The mode to settle in when no room is asking.
+          default: last
+          selector:
+            select:
+              options:
+                - {label: Keep the last mode, value: last}
+                - {label: Heat, value: heat}
+                - {label: Cool, value: cool}
+    idle:
+      name: Idle and setpoints
+      icon: mdi:fan-off
+      collapsed: true
+      input:
+        idle_action:
+          name: When a room is done or waiting
+          default: off_after_dry
+          selector:
+            select:
+              options:
+                - {label: "Fan to dry the coil after cooling, then off", value: off_after_dry}
+                - {label: Fan only, value: fan_only}
+                - {label: "Off", value: "off"}
+        coil_dry_minutes:
+          name: Coil dry time
+          default: 10
+          selector:
+            number: {min: 1, max: 60, step: 1, unit_of_measurement: min}
+        disabled_action:
+          name: A disabled room's head
+          default: "off"
+          selector:
+            select:
+              options:
+                - {label: Turn it off, value: "off"}
+                - {label: Leave it alone, value: leave}
+        drive_offset:
+          name: Setpoint drive offset
+          description: >-
+            Cloud heads still run on their own thermistor. While a room runs, its
+            head gets target plus this (heat) or minus this (cool), so it keeps
+            running until your room sensor reaches target. 0 sends the target.
+          default: 2.0
+          selector:
+            number: {min: 0, max: 6, step: 0.5, unit_of_measurement: "°"}
+        setpoint_step:
+          name: Setpoint step
+          description: 1 for °F, 0.5 for °C.
+          default: 1.0
+          selector:
+            number: {min: 0.1, max: 1, step: 0.1}
+        clamp_min:
+          name: Lowest setpoint
+          default: 59
+          selector:
+            number: {min: 40, max: 90, step: 1, unit_of_measurement: "°"}
+        clamp_max:
+          name: Highest setpoint
+          default: 88
+          selector:
+            number: {min: 50, max: 95, step: 1, unit_of_measurement: "°"}
+    fan:
+      name: Fan boost
+      icon: mdi:fan
+      collapsed: true
+      input:
+        fan_boost:
+          name: Fan boost
+          description: >-
+            Speed the fan up the further a room is from target. Uses the head's own
+            fan modes (minus auto) in the order it lists them, lowest first.
+          default: true
+          selector:
+            boolean: {}
+        fan_boost_max:
+          name: Highest fan step to use
+          description: 0 is the lowest listed speed. 4 is the most fan boost ever steps up.
+          default: 4
+          selector:
+            number: {min: 0, max: 4, step: 1}
+        fan_step:
+          name: Degrees per fan step
+          description: The fan steps up at 1, 2, 3, and 4 times this off target. 1 for °F, 0.5 for °C.
+          default: 1.0
+          selector:
+            number: {min: 0.25, max: 3, step: 0.25, unit_of_measurement: "°"}
+    seasons:
+      name: Seasons (optional)
+      icon: mdi:weather-partly-cloudy
+      collapsed: true
+      input:
+        outdoor:
+          name: Outdoor temperature
+          description: A sensor, or a weather entity's temperature. Leave blank for no lockouts.
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+                  device_class: temperature
+                - domain: weather
+        heat_lockout_above:
+          name: No heating at or above
+          default: 68
+          selector:
+            number: {min: 30, max: 100, step: 1, unit_of_measurement: "°"}
+        heat_floor:
+          name: Heat anyway below
+          default: 58
+          selector:
+            number: {min: 30, max: 80, step: 1, unit_of_measurement: "°"}
+        cool_lockout_below:
+          name: No cooling at or below
+          default: 50
+          selector:
+            number: {min: 0, max: 90, step: 1, unit_of_measurement: "°"}
+        cool_ceiling:
+          name: Cool anyway above
+          default: 80
+          selector:
+            number: {min: 60, max: 100, step: 1, unit_of_measurement: "°"}
+    health:
+      name: Health and pacing
+      icon: mdi:cloud-clock
+      collapsed: true
+      input:
+        sensor_stale_minutes:
+          name: Ignore a sensor quiet for
+          description: Minutes since its last report before a room stops asking. 0 = never.
+          default: 0
+          selector:
+            number: {min: 0, max: 1440, step: 5, unit_of_measurement: min}
+        settle_seconds:
+          name: Wait after sending commands
+          description: >-
+            Cloud heads report back slowly. After commands go out, runs that start
+            during this wait are skipped, so the same command isn't re-sent before
+            the head has reported.
+          default: 90
+          selector:
+            number: {min: 0, max: 600, step: 15, unit_of_measurement: s}
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  # One state_changed trigger per room entity. Unlike a state trigger, this one
+  # stays valid when an optional room is left blank or cleared, which a state
+  # trigger on an empty entity would turn into a broken automation.
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_1_head
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_1_sensor
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_1_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_1_enable
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_2_head
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_2_sensor
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_2_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_2_enable
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_3_head
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_3_sensor
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_3_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_3_enable
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_4_head
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_4_sensor
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_4_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_4_enable
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_5_head
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_5_sensor
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_5_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_5_enable
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_6_head
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_6_sensor
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_6_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_6_enable
+  - trigger: state
+    entity_id: !input coordinator_enable
+    to: "on"
+  - trigger: state
+    entity_id: !input mode_helper
+    to: ~
+  - trigger: time_pattern
+    minutes: /2
+  - trigger: homeassistant
+    event: start
+
+variables:
+  slots:
+    - slot: 1
+      head: !input room_1_head
+      sensor: !input room_1_sensor
+      target: !input room_1_target
+      enable: !input room_1_enable
+    - slot: 2
+      head: !input room_2_head
+      sensor: !input room_2_sensor
+      target: !input room_2_target
+      enable: !input room_2_enable
+    - slot: 3
+      head: !input room_3_head
+      sensor: !input room_3_sensor
+      target: !input room_3_target
+      enable: !input room_3_enable
+    - slot: 4
+      head: !input room_4_head
+      sensor: !input room_4_sensor
+      target: !input room_4_target
+      enable: !input room_4_enable
+    - slot: 5
+      head: !input room_5_head
+      sensor: !input room_5_sensor
+      target: !input room_5_target
+      enable: !input room_5_enable
+    - slot: 6
+      head: !input room_6_head
+      sensor: !input room_6_sensor
+      target: !input room_6_target
+      enable: !input room_6_enable
+  rooms_cfg: "{{ slots | selectattr('head') | list }}"
+  # Slots with some but not all four entities filled in.
+  incomplete: >-
+    {%- set ns = namespace(l=[]) -%}
+    {%- for s in slots -%}
+      {%- set n = [s.head, s.sensor, s.target, s.enable] | select | list | length -%}
+      {%- if n not in [0, 4] -%}{%- set ns.l = ns.l + [s.slot] -%}{%- endif -%}
+    {%- endfor -%}
+    {{ ns.l }}
+  duplicates: >-
+    {%- set ns = namespace(l=[]) -%}
+    {%- for key in ['head', 'sensor', 'target', 'enable'] -%}
+      {%- set used = rooms_cfg | map(attribute=key) | list -%}
+      {%- for e in used | unique -%}
+        {%- if used | select('eq', e) | list | length > 1 -%}{%- set ns.l = ns.l + [e] -%}{%- endif -%}
+      {%- endfor -%}
+    {%- endfor -%}
+    {{ ns.l }}
+  coordinator_enable: !input coordinator_enable
+  mode_helper: !input mode_helper
+  drift: !input drift
+  demand_threshold: !input demand_threshold
+  min_switch_seconds: !input min_switch_seconds
+  resting_mode: !input resting_mode
+  idle_action: !input idle_action
+  coil_dry_minutes: !input coil_dry_minutes
+  disabled_action: !input disabled_action
+  drive_offset: !input drive_offset
+  setpoint_step: !input setpoint_step
+  clamp_min: !input clamp_min
+  clamp_max: !input clamp_max
+  fan_boost: !input fan_boost
+  fan_boost_max: !input fan_boost_max
+  fan_step: !input fan_step
+  outdoor: !input outdoor
+  heat_lockout_above: !input heat_lockout_above
+  heat_floor: !input heat_floor
+  cool_lockout_below: !input cool_lockout_below
+  cool_ceiling: !input cool_ceiling
+  sensor_stale_minutes: !input sensor_stale_minutes
+  settle_seconds: !input settle_seconds
+  config_ok: >-
+    {{ rooms_cfg | length >= 1 and incomplete | length == 0 and duplicates | length == 0 }}
+  # The plan: a port of logic.py's room_call, engage_with_latch, shared_mode,
+  # fan_for_delta, and head_action. State between runs comes from entities:
+  # the mode helper holds the shared mode and its last_changed is the switch
+  # clock; a head in the shared mode is a room mid-run (the run-to-target
+  # latch); a head's time in fan_only is the coil dry timer; and its current
+  # fan_mode is the fan step.
+  plan: >-
+    {%- macro call(t, tgt, band, en, ok, neutral, hl, hf, cl, cc) -%}
+      {%- if not en -%}off
+      {%- elif not ok -%}{{ neutral }}
+      {%- else -%}
+        {%- set hb = tgt - band -%}
+        {%- set ca = tgt + band -%}
+        {%- if hl -%}{%- set hb = [hb, hf] | min -%}{%- endif -%}
+        {%- if cl -%}{%- set ca = [ca, cc] | max -%}{%- endif -%}
+        {%- if t > ca -%}cool{%- elif t < hb -%}heat{%- else -%}{{ neutral }}{%- endif -%}
+      {%- endif -%}
+    {%- endmacro -%}
+    {%- set ns = namespace(rooms=[], calls=[], parks=[], runs=[], od=none) -%}
+    {%- if outdoor -%}
+      {%- set ns.od = (state_attr(outdoor, 'temperature') if outdoor.startswith('weather.')
+                       else states(outdoor)) | float(none) -%}
+    {%- endif -%}
+    {%- set hl = ns.od is not none and ns.od >= heat_lockout_above -%}
+    {%- set cl = ns.od is not none and ns.od <= cool_lockout_below -%}
+    {%- set band = [demand_threshold, drift] | max -%}
+    {#- read each room and its demand -#}
+    {%- for rc in (rooms_cfg if config_ok else []) -%}
+      {%- set h = rc.head -%}
+      {%- set hx = expand(h) -%}
+      {%- set hs = hx[0] if hx else none -%}
+      {%- set sid = rc.sensor -%}
+      {%- set sx = expand(sid) -%}
+      {%- set t = states(sid) | float(none) -%}
+      {%- set tgt = states(rc.target) | float(none) -%}
+      {%- set en = is_state(rc.enable, 'on') -%}
+      {%- set head_ok = hs is not none and hs.state not in ['unknown', 'unavailable'] -%}
+      {%- set why = 'head unavailable' if not head_ok
+                    else 'no target' if tgt is none
+                    else 'sensor has no reading' if t is none else '' -%}
+      {%- if not why and sensor_stale_minutes | float(0) > 0 and sx -%}
+        {%- set quiet = (now() - (sx[0].last_reported or sx[0].last_updated)).total_seconds() / 60 -%}
+        {%- if quiet > sensor_stale_minutes | float(0) -%}
+          {%- set why = 'sensor quiet ' ~ (quiet | round(0) | int) ~ ' min' -%}
+        {%- endif -%}
+      {%- endif -%}
+      {%- set ok = not why -%}
+      {%- set demand = call(t, tgt, band, en, ok, 'neutral', hl, heat_floor, cl, cool_ceiling) | trim -%}
+      {%- if demand in ['heat', 'cool'] -%}{%- set ns.calls = ns.calls + [demand] -%}{%- endif -%}
+      {%- set ns.rooms = ns.rooms + [{'slot': rc.slot, 'head': h, 'sensor': sid,
+                                      'target_entity': rc.target, 'enable_entity': rc.enable,
+                                      'temp': t, 'target': tgt, 'enabled': en,
+                                      'ok': ok, 'head_ok': head_ok, 'problem': why,
+                                      'demand': demand, 'state': hs.state if head_ok else none}] -%}
+    {%- endfor -%}
+    {#- shared mode -#}
+    {%- set mx = expand(mode_helper) -%}
+    {%- set cur = states(mode_helper) -%}
+    {%- set cur = cur if cur in ['heat', 'cool'] else 'cool' -%}
+    {%- set allowed = not mx or (now() - mx[0].last_changed).total_seconds() >= min_switch_seconds | float(0) -%}
+    {%- set any_cool = 'cool' in ns.calls -%}
+    {%- set any_heat = 'heat' in ns.calls -%}
+    {%- set standoff = any_cool and any_heat -%}
+    {%- set rest = resting_mode if resting_mode in ['heat', 'cool'] else cur -%}
+    {%- set proposed = ns.calls[0] if standoff else 'cool' if any_cool else 'heat' if any_heat else rest -%}
+    {%- set still = (cur == 'cool' and any_cool) or (cur == 'heat' and any_heat) -%}
+    {%- set mode = proposed if proposed != cur and allowed and (standoff or not still) else cur -%}
+    {#- engage, action, and commands per head -#}
+    {%- set ns.out = [] -%}
+    {%- for r in ns.rooms -%}
+      {%- set h = r.head -%}
+      {%- set prior = r.state if r.state in ['heat', 'cool'] else none -%}
+      {%- if prior -%}
+        {%- set raw = call(r.temp, r.target, 0, r.enabled, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
+        {%- set engage = raw if raw in [prior, 'off'] else 'satisfied' -%}
+      {%- else -%}
+        {%- set engage = call(r.temp, r.target, drift, r.enabled, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
+      {%- endif -%}
+      {%- set modes = state_attr(h, 'hvac_modes') or [] -%}
+      {%- set can_fan = 'fan_only' in modes -%}
+      {%- set run = r.head_ok and r.enabled and engage == mode -%}
+      {%- if not r.head_ok -%}
+        {%- set act = 'skip' -%}
+      {%- elif not r.enabled -%}
+        {%- set act = 'leave' if disabled_action == 'leave' else 'off' -%}
+      {%- elif run -%}
+        {%- set act = mode -%}
+      {%- elif idle_action == 'fan_only' and can_fan -%}
+        {%- set act = 'fan_only' -%}
+      {%- elif idle_action == 'off_after_dry' and can_fan and r.state == 'cool' -%}
+        {%- set act = 'fan_only' -%}
+      {%- elif idle_action == 'off_after_dry' and can_fan and r.state == 'fan_only'
+              and (now() - expand(h)[0].last_changed).total_seconds() < coil_dry_minutes | float(0) * 60 -%}
+        {%- set act = 'fan_only' -%}
+      {%- else -%}
+        {%- set act = 'off' -%}
+      {%- endif -%}
+      {%- set info = {'setpoint': none, 'fan': none} -%}
+      {%- if act in ['off', 'fan_only'] and r.state != act -%}
+        {%- set ns.parks = ns.parks + [{'entity': h, 'service': 'set_hvac_mode', 'data': {'hvac_mode': act}}] -%}
+      {%- elif run -%}
+        {%- if r.state != mode -%}
+          {%- set ns.runs = ns.runs + [{'entity': h, 'service': 'set_hvac_mode', 'data': {'hvac_mode': mode}}] -%}
+        {%- endif -%}
+        {%- set s = setpoint_step | float(1) -%}
+        {%- set lo = [clamp_min, state_attr(h, 'min_temp') | float(clamp_min)] | max -%}
+        {%- set hi = [clamp_max, state_attr(h, 'max_temp') | float(clamp_max)] | min -%}
+        {%- set want = r.target + drive_offset if mode == 'heat' else r.target - drive_offset -%}
+        {%- set sp = ((([[want, lo] | max, hi] | min) / s) | round(0)) * s -%}
+        {%- set cur_sp = state_attr(h, 'temperature') | float(none) -%}
+        {%- if cur_sp is none or (cur_sp - sp) | abs >= s / 2 -%}
+          {%- set ns.runs = ns.runs + [{'entity': h, 'service': 'set_temperature', 'data': {'temperature': sp}}] -%}
+        {%- endif -%}
+        {%- set fan = none -%}
+        {%- if fan_boost -%}
+          {%- set ladder = namespace(l=[]) -%}
+          {%- for f in state_attr(h, 'fan_modes') or [] -%}
+            {%- if f | string | lower != 'auto' -%}{%- set ladder.l = ladder.l + [f] -%}{%- endif -%}
+          {%- endfor -%}
+          {%- if ladder.l -%}
+            {%- set top = [fan_boost_max | int(4), ladder.l | length - 1, 4] | min -%}
+            {%- set cur_fan = state_attr(h, 'fan_mode') -%}
+            {%- set f = namespace(i=0) -%}
+            {%- for x in ladder.l -%}{%- if x == cur_fan -%}{%- set f.i = loop.index0 -%}{%- endif -%}{%- endfor -%}
+            {%- set f.i = [f.i, top] | min -%}
+            {%- set delta = (r.temp - r.target) | abs -%}
+            {%- for k in range(5) -%}
+              {%- if f.i < top and delta >= (f.i + 1) * fan_step -%}{%- set f.i = f.i + 1 -%}{%- endif -%}
+            {%- endfor -%}
+            {%- for k in range(5) -%}
+              {%- if f.i > 0 and delta < (f.i - 0.5) * fan_step -%}{%- set f.i = f.i - 1 -%}{%- endif -%}
+            {%- endfor -%}
+            {%- set fan = ladder.l[f.i] -%}
+            {%- if cur_fan != fan -%}
+              {%- set ns.runs = ns.runs + [{'entity': h, 'service': 'set_fan_mode', 'data': {'fan_mode': fan}}] -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endif -%}
+        {%- set info = {'setpoint': sp, 'fan': fan} -%}
+      {%- endif -%}
+      {%- set ns.out = ns.out + [dict(r, engage=engage, action=act, **info)] -%}
+    {%- endfor -%}
+    {#- parks go first, so the outdoor unit is never asked for both directions.
+        Output a dict, not tojson: HA reads variables back as Python literals. -#}
+    {{ {'mode': mode, 'previous': cur, 'proposed': proposed, 'standoff': standoff,
+        'mode_change_allowed': allowed, 'outdoor': ns.od, 'heat_lockout': hl,
+        'cool_lockout': cl, 'rooms': ns.out, 'commands': ns.parks + ns.runs} }}
+
+actions:
+  - if: "{{ not config_ok }}"
+    then:
+      - action: persistent_notification.create
+        data:
+          notification_id: mxz_coordinator_blueprint
+          title: MXZ Coordinator
+          message: >-
+            The automation is doing nothing until its rooms are fixed.
+            {%- if incomplete %}
+            Room {{ incomplete | join(', ') }}: each room needs a head, sensor,
+            target, and enable, or none of them.
+            {%- endif %}
+            {%- if duplicates %}
+            Used by more than one room: {{ duplicates | join(', ') }}.
+            {%- endif %}
+            {%- if not rooms_cfg %}
+            No room has a head.
+            {%- endif %}
+      - stop: Rooms are not set up correctly
+  - condition: state
+    entity_id: !input coordinator_enable
+    state: "on"
+  - if: "{{ plan.mode != states(mode_helper) }}"
+    then:
+      - action: input_select.select_option
+        target:
+          entity_id: !input mode_helper
+        data:
+          option: "{{ plan.mode }}"
+  - repeat:
+      for_each: "{{ plan.commands }}"
+      sequence:
+        - action: "climate.{{ repeat.item.service }}"
+          target:
+            entity_id: "{{ repeat.item.entity }}"
+          data: "{{ repeat.item.data }}"
+          continue_on_error: true
+  - if: "{{ plan.commands | length > 0 }}"
+    then:
+      - delay:
+          seconds: "{{ settle_seconds | int(0) }}"
