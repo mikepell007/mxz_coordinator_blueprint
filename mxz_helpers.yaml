@@ -4,6 +4,8 @@
 # enable for each room you set up; °C users: min 10, max 31, step 0.5.
 # A dual-setpoint room uses a heat-to and a cool-to helper instead of a
 # target; the bedroom below is set up that way.
+# Don't add `initial:` to these: HA would reset them to it on every restart
+# instead of keeping the last value you set.
 input_boolean:
   mxz_enable:
     name: MXZ coordinator enable
@@ -12,6 +14,18 @@ input_boolean:
     name: MXZ Living Room enable
   mxz_bedroom_enable:
     name: MXZ Bedroom enable
+
+# A room's doors and windows, as one sensor that is on while any is open.
+# YAML groups like this need the group integration's binary_sensor platform;
+# the Helpers UI (Group -> Binary sensor group) makes the same thing.
+binary_sensor:
+  - platform: group
+    name: MXZ Bedroom openings
+    unique_id: mxz_bedroom_openings
+    device_class: opening
+    entities:
+      - binary_sensor.bedroom_window
+      - binary_sensor.bedroom_door
 
 input_select:
   # The shared mode. Options must be exactly heat and cool.
@@ -35,7 +49,6 @@ input_number:
     min: 55
     max: 85
     step: 1
-    initial: 68
     unit_of_measurement: "°F"
     mode: box
   mxz_bedroom_cool_to:
@@ -43,6 +56,5 @@ input_number:
     min: 55
     max: 85
     step: 1
-    initial: 74
     unit_of_measurement: "°F"
     mode: box

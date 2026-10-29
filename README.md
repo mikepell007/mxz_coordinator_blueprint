@@ -23,6 +23,7 @@ that controls the same heads.
 | Weather lockouts with safety floor/ceiling | Yes, from an outdoor sensor or weather entity |
 | Up to 8 heads | Up to 6 rooms |
 | Dual setpoint (Heat to / Cool to) | Yes, per room, from two `input_number` helpers |
+| Doors and windows | New here: an open room's head turns off and the room asks for nothing |
 | Eco/away, standby hold, safety priority, freeze floor, own-remote rooms, lost-vote TTL, per-room thermostats | No |
 
 ## The local-sensor difference
@@ -62,6 +63,27 @@ that edge. Cool to must sit at least **Least gap between heat to and cool to**
 (2 °F) above Heat to; a narrower pair makes the room ask for nothing, and the
 trace says why. A room with both a Target and a Heat to/Cool to, or only half a
 pair, gets the setup notification.
+
+**Doors and windows.** Give a room a **doors and windows** `binary_sensor`
+that is on while any of them is open. For several contacts, make a group:
+**Settings → Devices & services → Helpers → Create helper → Group → Binary
+sensor group**, add the room's door and window sensors, and leave **All
+entities** off so the group is on when any one is open (example in
+[mxz_helpers.yaml](mxz_helpers.yaml)). Once it has been on for **Door or window
+open delay** (60 s), the room's head is turned straight off, with no coil-dry
+fan, and the room asks for nothing, so it can't flip the shared mode. If someone
+turns the head on while it's open, the next run turns it off again. One group
+can serve several rooms, such as an open plan living room and kitchen.
+
+A stopped head doesn't start while a door or window is open, even before the
+open delay, or until they have all been shut for **Door or window close delay**
+(120 s). So a door opened over and over, carrying groceries in, stops the head
+once and restarts it once. A head that is still running isn't stopped by
+openings shorter than the open delay. Set the close delay to 0 to restart as
+soon as everything is shut.
+
+Both delays are checked on the 2-minute timer, so the head goes off, or back
+on, up to 2 minutes after a delay ends.
 
 Each run's trace shows every room's slot, head, sensor, target, and enable, under
 **Traces → Changed variables → plan**.

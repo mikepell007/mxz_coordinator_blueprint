@@ -392,3 +392,137 @@ async def test_target_shared_with_heat_to_notifies(hass: HomeAssistant, freezer)
     await rig.setup(**(dual(1) | {"room_2_heat_to": TARGETS[0]}))
     assert await rig.run() == []
     assert f"Used by more than one room: {TARGETS[0]}" in notes[-1]["message"]
+
+
+OPEN = "binary_sensor.bedroom_openings"
+
+
+async def test_open_window_stops_the_room(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OPEN, "off")
+    await rig.setup(room_2_open=OPEN, open_delay_seconds=60)
+    await rig.set(SENSORS[1], 66)
+    await rig.run()
+    assert rig.head(1).state == "heat"
+
+    # Opened: nothing until the open delay passes, then straight off (no coil dry).
+    await rig.set(OPEN, "on")
+    await rig.run(after=30)
+    assert rig.head(1).state == "heat"
+    await rig.run(after=31)
+    assert rig.head(1).state == "off"
+
+    # Turned back on by remote while it's open: turned off again.
+    await rig.set(HEADS[1], "heat")
+    await rig.run()
+    assert rig.head(1).state == "off"
+
+    # Closed: the head stays off until the close delay (120 s default) passes.
+    await rig.set(OPEN, "off")
+    await rig.run(after=1)
+    assert rig.head(1).state == "off"
+    await rig.run(after=120)
+    assert rig.head(1).state == "heat"
+
+
+async def test_close_delay_zero_resumes_at_once(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OPEN, "on")
+    await rig.setup(room_2_open=OPEN, open_delay_seconds=0, close_delay_seconds=0)
+    await rig.set(SENSORS[1], 66)
+    await rig.run()
+    assert rig.head(1).state == "off"
+    await rig.set(OPEN, "off")
+    await rig.run(after=1)
+    assert rig.head(1).state == "heat"
+
+
+async def test_groceries(hass: HomeAssistant, freezer) -> None:
+    """A door opened and closed over and over."""
+    rig = Rig(hass, freezer)
+    await rig.set(OPEN, "off")
+    await rig.setup(room_2_open=OPEN, open_delay_seconds=60, close_delay_seconds=120)
+    await rig.set(SENSORS[1], 66)
+    await rig.run()
+    assert rig.head(1).state == "heat"
+
+    # Short trips, each under the open delay: the running head keeps running.
+    for _ in range(3):
+        await rig.set(OPEN, "on")
+        await rig.run(after=20)
+        await rig.set(OPEN, "off")
+        await rig.run(after=20)
+        assert rig.head(1).state == "heat"
+
+    # A long one stops it; then more short trips don't restart it.
+    await rig.set(OPEN, "on")
+    await rig.run(after=61)
+    assert rig.head(1).state == "off"
+    for _ in range(3):
+        await rig.set(OPEN, "off")
+        await rig.run(after=40)
+        assert rig.head(1).state == "off"
+        await rig.set(OPEN, "on")
+        await rig.run(after=20)
+        assert rig.head(1).state == "off"
+
+    # Shut for good: it restarts once the close delay has passed.
+    await rig.set(OPEN, "off")
+    await rig.run(after=60)
+    assert rig.head(1).state == "off"
+    await rig.run(after=61)
+    assert rig.head(1).state == "heat"
+
+
+async def test_held_room_doesnt_flip_the_mode(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OPEN, "off")
+    await rig.setup(room_2_open=OPEN, close_delay_seconds=120)
+    await rig.set(OPEN, "on")
+    await rig.set(OPEN, "off")  # just closed; the head is off
+    await rig.set(SENSORS[1], 60)
+    await rig.run(after=1)
+    assert rig.mode() == "cool"
+    assert rig.head(1).state == "off"
+
+
+async def test_open_room_makes_no_demand(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OPEN, "on")
+    await rig.setup(room_2_open=OPEN, open_delay_seconds=0)
+    await rig.set(SENSORS[1], 60)
+    await rig.run()
+    assert rig.mode() == "cool"  # its heat call doesn't flip the shared mode
+    assert rig.head(1).state == "off"
+
+
+async def test_cooling_room_opened_skips_coil_dry(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OPEN, "off")
+    await rig.setup(room_1_open=OPEN, open_delay_seconds=0)
+    await rig.set(SENSORS[0], 74)
+    await rig.run()
+    assert rig.head(0).state == "cool"
+    await rig.set(OPEN, "on")
+    await rig.run()
+    assert rig.head(0).state == "off"
+
+
+async def test_one_openings_group_for_two_rooms(hass: HomeAssistant, freezer) -> None:
+    notes = await capture_notes(hass)
+    rig = Rig(hass, freezer)
+    await rig.set(OPEN, "on")
+    await rig.setup(room_1_open=OPEN, room_2_open=OPEN, open_delay_seconds=0)
+    await rig.set(SENSORS[0], 76)
+    await rig.set(SENSORS[1], 76)
+    await rig.run()
+    assert notes == []  # sharing an openings sensor is allowed
+    assert rig.head(0).state == rig.head(1).state == "off"
+
+
+async def test_open_sensor_alone_is_a_partly_filled_room(hass: HomeAssistant, freezer) -> None:
+    notes = await capture_notes(hass)
+    rig = Rig(hass, freezer)
+    await rig.setup(room_3_open=OPEN)
+    assert await rig.run() == []
+    assert "Room 3: each room needs a head, sensor" in notes[-1]["message"]

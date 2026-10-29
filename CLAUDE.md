@@ -60,6 +60,18 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
   pair under `dual_min_gap` makes the room ask for nothing (`problem` says why).
   No midpoint target, `shift_range`, or switching a room between single and dual
   at runtime; which kind a room is comes from which inputs are filled.
+- **Doors and windows are ours, not upstream's.** A room's optional `open`
+  binary_sensor, on for `open_delay_seconds` (measured from its `last_changed`),
+  makes the room `open`: `call` gets `en` false (no demand, no engage) and the
+  `act` chain picks `off`, with no coil dry. `held` is a stopped head (not in
+  heat/cool) whose sensor is on but not yet `open`, or off for under
+  `close_delay_seconds`: it gets no demand or engage and `act` `hold` (no
+  command), so it can't start; a running head is never held. With no memory, the
+  blueprint can't tell whether a closed door's last opening was long enough to
+  count, so the close delay applies after any opening, but only to stopped heads.
+  Ordered after "disabled", so a disabled room's `leave` still wins. Not in
+  `duplicates`: one group may serve several rooms. A delay running out isn't a
+  state change, so the 2-minute time pattern is what notices it.
 - Not ported: eco/away, standby hold, safety priority, freeze floor,
   own-remote rooms, per-room thermostat entities.
 
@@ -73,14 +85,14 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
 - **Variables come back as Python literals, not JSON.** End `plan` with a bare
   dict (`{{ {...} }}`). `| tojson` makes `true`/`null`, which fails literal parsing,
   and `plan` silently becomes a string.
-- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable`;
+- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable/open`;
   head, sensor, and enable required in 1–2, everything else default `""`). A room
   has a target or a Heat to/Cool to pair, never both; `dual` in the plan is "no
   target". `slots` gathers them, `rooms_cfg` keeps slots with a head, and
   `config_ok` rejects partly filled slots (`incomplete`) and entities used twice
   (`duplicates`; target, heat to, and cool to are one pool); the plan loop skips
   rooms when it's false so the notification can run. Slot number is priority.
-  Adding a slot means touching the inputs, the six triggers, and `slots`; nothing
+  Adding a slot means touching the inputs, the seven triggers, and `slots`; nothing
   in `plan` changes.
 - **Room triggers are `state_changed` event triggers, not state triggers.** A state
   trigger on an optional slot saved as `""` or `null` (filled, then cleared in the UI)
@@ -88,7 +100,7 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
   `event_data.entity_id` doesn't care. Verified on HA 2026.10.4. They also fire on
   attribute-only changes, which `mode: single` and the settle delay absorb.
 - Each plan room carries `slot`, `sensor`, `target_entity`, `heat_to_entity`,
-  `cool_to_entity`, and `enable_entity` so the trace shows the pairing. Keep them when changing the plan.
+  `cool_to_entity`, `enable_entity`, and `open_entity` so the trace shows the pairing. Keep them when changing the plan.
 - `tests/test_blueprint.py` asserts `automation.mxz` is `on` after setup: a blueprint
   that fails to load or attach leaves it `unavailable` without failing setup.
 - Jinja macros don't see outer `set` variables; pass everything in as arguments (see `call`).

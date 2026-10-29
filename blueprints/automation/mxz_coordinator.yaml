@@ -71,6 +71,16 @@ blueprint:
           selector:
             entity:
               domain: input_boolean
+        room_1_open:
+          name: Room 1 doors and windows
+          description: >-
+            Optional. A binary_sensor that is on while a door or window is open,
+            such as a group of the room's contact sensors. While it's on, the
+            head is turned off and the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: binary_sensor
     room_2:
       name: Room 2
       icon: mdi:numeric-2-box-outline
@@ -120,6 +130,16 @@ blueprint:
           selector:
             entity:
               domain: input_boolean
+        room_2_open:
+          name: Room 2 doors and windows
+          description: >-
+            Optional. A binary_sensor that is on while a door or window is open,
+            such as a group of the room's contact sensors. While it's on, the
+            head is turned off and the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: binary_sensor
     room_3:
       name: Room 3
       icon: mdi:numeric-3-box-outline
@@ -173,6 +193,16 @@ blueprint:
           selector:
             entity:
               domain: input_boolean
+        room_3_open:
+          name: Room 3 doors and windows
+          description: >-
+            Optional. A binary_sensor that is on while a door or window is open,
+            such as a group of the room's contact sensors. While it's on, the
+            head is turned off and the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: binary_sensor
     room_4:
       name: Room 4
       icon: mdi:numeric-4-box-outline
@@ -226,6 +256,16 @@ blueprint:
           selector:
             entity:
               domain: input_boolean
+        room_4_open:
+          name: Room 4 doors and windows
+          description: >-
+            Optional. A binary_sensor that is on while a door or window is open,
+            such as a group of the room's contact sensors. While it's on, the
+            head is turned off and the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: binary_sensor
     room_5:
       name: Room 5
       icon: mdi:numeric-5-box-outline
@@ -279,6 +319,16 @@ blueprint:
           selector:
             entity:
               domain: input_boolean
+        room_5_open:
+          name: Room 5 doors and windows
+          description: >-
+            Optional. A binary_sensor that is on while a door or window is open,
+            such as a group of the room's contact sensors. While it's on, the
+            head is turned off and the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: binary_sensor
     room_6:
       name: Room 6
       icon: mdi:numeric-6-box-outline
@@ -332,6 +382,16 @@ blueprint:
           selector:
             entity:
               domain: input_boolean
+        room_6_open:
+          name: Room 6 doors and windows
+          description: >-
+            Optional. A binary_sensor that is on while a door or window is open,
+            such as a group of the room's contact sensors. While it's on, the
+            head is turned off and the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: binary_sensor
     control:
       name: Coordinator
       icon: mdi:hvac
@@ -406,6 +466,24 @@ blueprint:
           default: 10
           selector:
             number: {min: 1, max: 60, step: 1, unit_of_measurement: min}
+        open_delay_seconds:
+          name: Door or window open delay
+          description: >-
+            How long a room's doors and windows sensor must stay on before its head
+            is turned off, so a door opened in passing doesn't stop the room.
+          default: 60
+          selector:
+            number: {min: 0, max: 1800, step: 15, unit_of_measurement: s}
+        close_delay_seconds:
+          name: Door or window close delay
+          description: >-
+            How long a room's doors and windows must stay closed before a stopped
+            head starts again, so a door opened over and over (carrying groceries
+            in) doesn't restart it each time. A head that is still running keeps
+            running. 0 restarts at once.
+          default: 120
+          selector:
+            number: {min: 0, max: 1800, step: 15, unit_of_measurement: s}
         disabled_action:
           name: A disabled room's head
           default: "off"
@@ -554,6 +632,10 @@ triggers:
   - trigger: event
     event_type: state_changed
     event_data:
+      entity_id: !input room_1_open
+  - trigger: event
+    event_type: state_changed
+    event_data:
       entity_id: !input room_2_head
   - trigger: event
     event_type: state_changed
@@ -575,6 +657,10 @@ triggers:
     event_type: state_changed
     event_data:
       entity_id: !input room_2_enable
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_2_open
   - trigger: event
     event_type: state_changed
     event_data:
@@ -602,6 +688,10 @@ triggers:
   - trigger: event
     event_type: state_changed
     event_data:
+      entity_id: !input room_3_open
+  - trigger: event
+    event_type: state_changed
+    event_data:
       entity_id: !input room_4_head
   - trigger: event
     event_type: state_changed
@@ -623,6 +713,10 @@ triggers:
     event_type: state_changed
     event_data:
       entity_id: !input room_4_enable
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_4_open
   - trigger: event
     event_type: state_changed
     event_data:
@@ -650,6 +744,10 @@ triggers:
   - trigger: event
     event_type: state_changed
     event_data:
+      entity_id: !input room_5_open
+  - trigger: event
+    event_type: state_changed
+    event_data:
       entity_id: !input room_6_head
   - trigger: event
     event_type: state_changed
@@ -671,6 +769,10 @@ triggers:
     event_type: state_changed
     event_data:
       entity_id: !input room_6_enable
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_6_open
   - trigger: state
     entity_id: !input coordinator_enable
     to: "on"
@@ -691,6 +793,7 @@ variables:
       heat_to: !input room_1_heat_to
       cool_to: !input room_1_cool_to
       enable: !input room_1_enable
+      open: !input room_1_open
     - slot: 2
       head: !input room_2_head
       sensor: !input room_2_sensor
@@ -698,6 +801,7 @@ variables:
       heat_to: !input room_2_heat_to
       cool_to: !input room_2_cool_to
       enable: !input room_2_enable
+      open: !input room_2_open
     - slot: 3
       head: !input room_3_head
       sensor: !input room_3_sensor
@@ -705,6 +809,7 @@ variables:
       heat_to: !input room_3_heat_to
       cool_to: !input room_3_cool_to
       enable: !input room_3_enable
+      open: !input room_3_open
     - slot: 4
       head: !input room_4_head
       sensor: !input room_4_sensor
@@ -712,6 +817,7 @@ variables:
       heat_to: !input room_4_heat_to
       cool_to: !input room_4_cool_to
       enable: !input room_4_enable
+      open: !input room_4_open
     - slot: 5
       head: !input room_5_head
       sensor: !input room_5_sensor
@@ -719,6 +825,7 @@ variables:
       heat_to: !input room_5_heat_to
       cool_to: !input room_5_cool_to
       enable: !input room_5_enable
+      open: !input room_5_open
     - slot: 6
       head: !input room_6_head
       sensor: !input room_6_sensor
@@ -726,13 +833,14 @@ variables:
       heat_to: !input room_6_heat_to
       cool_to: !input room_6_cool_to
       enable: !input room_6_enable
+      open: !input room_6_open
   rooms_cfg: "{{ slots | selectattr('head') | list }}"
   # Slots with something filled in but not a full room: a head, sensor, and
   # enable, plus either a target or a Heat to / Cool to pair (not both).
   incomplete: >-
     {%- set ns = namespace(l=[]) -%}
     {%- for s in slots -%}
-      {%- set filled = [s.head, s.sensor, s.target, s.heat_to, s.cool_to, s.enable] | select | list -%}
+      {%- set filled = [s.head, s.sensor, s.target, s.heat_to, s.cool_to, s.enable, s.open] | select | list -%}
       {%- set single = s.target and not s.heat_to and not s.cool_to -%}
       {%- set dual = not s.target and s.heat_to and s.cool_to -%}
       {%- if filled and not (s.head and s.sensor and s.enable and (single or dual)) -%}
@@ -763,6 +871,8 @@ variables:
   idle_action: !input idle_action
   coil_dry_minutes: !input coil_dry_minutes
   disabled_action: !input disabled_action
+  open_delay_seconds: !input open_delay_seconds
+  close_delay_seconds: !input close_delay_seconds
   drive_offset: !input drive_offset
   setpoint_step: !input setpoint_step
   clamp_min: !input clamp_min
@@ -821,6 +931,17 @@ variables:
       {%- set ct = states(rc.cool_to) | float(none) if dual else tgt -%}
       {%- set en = is_state(rc.enable, 'on') -%}
       {%- set head_ok = hs is not none and hs.state not in ['unknown', 'unavailable'] -%}
+      {#- open: the room's doors/windows sensor has been on for the open delay.
+          A shared group (an open-plan space) may serve several rooms. -#}
+      {%- set ox = expand(rc.open) if rc.open else [] -%}
+      {%- set oage = (now() - ox[0].last_changed).total_seconds() if ox else 0 -%}
+      {%- set open = ox | length > 0 and ox[0].state == 'on' and oage >= open_delay_seconds | float(0) -%}
+      {#- held: open but not yet for the open delay, or closed for less than the
+          close delay, while the head isn't running. It doesn't start; a running
+          head carries on. -#}
+      {%- set held = ox | length > 0 and head_ok and hs.state not in ['heat', 'cool']
+                     and ((ox[0].state == 'on' and not open)
+                          or (ox[0].state == 'off' and oage < close_delay_seconds | float(0))) -%}
       {%- set why = 'head unavailable' if not head_ok
                     else 'no target' if ht is none or ct is none
                     else 'cool to is less than ' ~ dual_min_gap ~ ' above heat to'
@@ -833,11 +954,12 @@ variables:
         {%- endif -%}
       {%- endif -%}
       {%- set ok = not why -%}
-      {%- set demand = call(t, ht, ct, band, en, ok, 'neutral', hl, heat_floor, cl, cool_ceiling) | trim -%}
+      {%- set demand = call(t, ht, ct, band, en and not open and not held, ok, 'neutral', hl, heat_floor, cl, cool_ceiling) | trim -%}
       {%- if demand in ['heat', 'cool'] -%}{%- set ns.calls = ns.calls + [demand] -%}{%- endif -%}
       {%- set ns.rooms = ns.rooms + [{'slot': rc.slot, 'head': h, 'sensor': sid,
                                       'target_entity': rc.target, 'heat_to_entity': rc.heat_to,
                                       'cool_to_entity': rc.cool_to, 'enable_entity': rc.enable,
+                                      'open_entity': rc.open, 'open': open, 'held': held,
                                       'temp': t, 'dual': dual, 'target': tgt,
                                       'heat_to': ht, 'cool_to': ct, 'enabled': en,
                                       'ok': ok, 'head_ok': head_ok, 'problem': why,
@@ -861,18 +983,24 @@ variables:
       {%- set h = r.head -%}
       {%- set prior = r.state if r.state in ['heat', 'cool'] else none -%}
       {%- if prior -%}
-        {%- set raw = call(r.temp, r.heat_to, r.cool_to, 0, r.enabled, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
+        {%- set raw = call(r.temp, r.heat_to, r.cool_to, 0, r.enabled and not r.open and not r.held, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
         {%- set engage = raw if raw in [prior, 'off'] else 'satisfied' -%}
       {%- else -%}
-        {%- set engage = call(r.temp, r.heat_to, r.cool_to, drift, r.enabled, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
+        {%- set engage = call(r.temp, r.heat_to, r.cool_to, drift, r.enabled and not r.open and not r.held, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
       {%- endif -%}
       {%- set modes = state_attr(h, 'hvac_modes') or [] -%}
       {%- set can_fan = 'fan_only' in modes -%}
-      {%- set run = r.head_ok and r.enabled and engage == mode -%}
+      {%- set run = r.head_ok and r.enabled and not r.open and not r.held and engage == mode -%}
       {%- if not r.head_ok -%}
         {%- set act = 'skip' -%}
       {%- elif not r.enabled -%}
         {%- set act = 'leave' if disabled_action == 'leave' else 'off' -%}
+      {%- elif r.open -%}
+        {#- straight off, no coil dry: don't blow air out an open window -#}
+        {%- set act = 'off' -%}
+      {%- elif r.held -%}
+        {#- left as it is (off after an opening, or drying) until the close delay ends -#}
+        {%- set act = 'hold' -%}
       {%- elif run -%}
         {%- set act = mode -%}
       {%- elif idle_action == 'fan_only' and can_fan -%}
