@@ -105,8 +105,10 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
   that fails to load or attach leaves it `unavailable` without failing setup.
 - Jinja macros don't see outer `set` variables; pass everything in as arguments (see `call`).
 - Tests set `settle_seconds: 0`.
-- No `source_url` yet: add the real GitHub raw/blob URL once the repo is pushed, so
-  the import and update buttons work.
+- `source_url` and the README's import badge point at the blueprint on GitHub
+  (`mikepell007/mxz_coordinator_blueprint`, branch `main`). Re-import pulls from
+  there, so what's on `main` is what users get; rename or move the file and both
+  need updating (the badge's `blueprint_url` is URL-encoded).
 
 ## Testing limits
 

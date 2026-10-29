@@ -42,10 +42,16 @@ the offset; `0` sends the bare target.
    Helpers UI: a target `input_number` and an enable `input_boolean` for each
    room, `input_boolean.mxz_enable`, and `input_select.mxz_mode` with exactly the
    options `heat` and `cool`.
-2. Copy [blueprints/automation/mxz_coordinator.yaml](blueprints/automation/mxz_coordinator.yaml)
-   to `<config>/blueprints/automation/mxz/` and reload automations, or import it
-   from its GitHub URL under **Settings → Automations & scenes → Blueprints →
-   Import blueprint**.
+2. Import the blueprint:
+
+   [![Open your Home Assistant instance and show the blueprint import dialog with this blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmikepell007%2Fmxz_coordinator_blueprint%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fmxz_coordinator.yaml)
+
+   Or under **Settings → Automations & scenes → Blueprints → Import
+   blueprint**, paste `https://github.com/mikepell007/mxz_coordinator_blueprint/blob/main/blueprints/automation/mxz_coordinator.yaml`.
+   Or copy [the file](blueprints/automation/mxz_coordinator.yaml) to
+   `<config>/blueprints/automation/mxz/` and reload automations. Imported
+   copies can pick up later versions with the blueprint's **Re-import
+   blueprint** menu item.
 3. Create an automation from it. Each room has its own section: pick its
    **head, temperature sensor, target, and enable** there. Room 1 has the highest
    priority: when rooms want opposite modes, the lowest-numbered room asking

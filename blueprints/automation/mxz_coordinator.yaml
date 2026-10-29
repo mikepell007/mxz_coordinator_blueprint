@@ -19,6 +19,7 @@ blueprint:
     shared mode. You can also pick a mode on it yourself; the wait between
     switches restarts from that change.
   domain: automation
+  source_url: https://github.com/mikepell007/mxz_coordinator_blueprint/blob/main/blueprints/automation/mxz_coordinator.yaml
   homeassistant:
     min_version: 2024.10.0
   input:
