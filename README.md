@@ -22,7 +22,8 @@ that controls the same heads.
 | Puts a head back after a remote press | Yes, on the next run |
 | Weather lockouts with safety floor/ceiling | Yes, from an outdoor sensor or weather entity |
 | Up to 8 heads | Up to 6 rooms |
-| Eco/away, standby hold, dual setpoint, safety priority, freeze floor, own-remote rooms, lost-vote TTL, per-room thermostats | No |
+| Dual setpoint (Heat to / Cool to) | Yes, per room, from two `input_number` helpers |
+| Eco/away, standby hold, safety priority, freeze floor, own-remote rooms, lost-vote TTL, per-room thermostats | No |
 
 ## The local-sensor difference
 
@@ -51,6 +52,16 @@ the offset; `0` sends the bare target.
    If a room is only partly filled in, or one entity is used by two rooms, the
    automation does nothing and posts a notification saying which.
 4. Turn on each room's enable, then `input_boolean.mxz_enable`.
+
+**Dual setpoint.** A room can have a range instead of one target: leave its
+**Target** blank and pick a **Heat to** and a **Cool to** `input_number`. The
+room asks for heat below Heat to and for cool above Cool to (each past the same
+threshold and drift as a single target), runs to whichever edge it started from,
+and asks for nothing in between. The drive offset and fan boost measure from
+that edge. Cool to must sit at least **Least gap between heat to and cool to**
+(2 °F) above Heat to; a narrower pair makes the room ask for nothing, and the
+trace says why. A room with both a Target and a Heat to/Cool to, or only half a
+pair, gets the setup notification.
 
 Each run's trace shows every room's slot, head, sensor, target, and enable, under
 **Traces → Changed variables → plan**.

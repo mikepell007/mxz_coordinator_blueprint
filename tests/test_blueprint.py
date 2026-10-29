@@ -21,6 +21,8 @@ HEADS = [f"climate.{r}" for r in ROOMS]
 SENSORS = [f"sensor.{r}_temperature" for r in ROOMS]
 TARGETS = [f"input_number.{r}_target" for r in ROOMS]
 ENABLES = [f"input_boolean.{r}_enable" for r in ROOMS]
+HEAT_TOS = [f"input_number.{r}_heat_to" for r in ROOMS]
+COOL_TOS = [f"input_number.{r}_cool_to" for r in ROOMS]
 
 
 def slot_inputs(rooms: int) -> dict:
@@ -30,6 +32,14 @@ def slot_inputs(rooms: int) -> dict:
         out |= {f"room_{n + 1}_head": HEADS[n], f"room_{n + 1}_sensor": SENSORS[n],
                 f"room_{n + 1}_target": TARGETS[n], f"room_{n + 1}_enable": ENABLES[n]}
     return out
+
+
+def dual(i: int) -> dict:
+    """Inputs that turn room slot i+1 into a dual-setpoint room (68 to 74)."""
+    return {f"room_{i + 1}_target": "", f"room_{i + 1}_heat_to": HEAT_TOS[i],
+            f"room_{i + 1}_cool_to": COOL_TOS[i]}
+
+
 HEAD_ATTRS = {
     "hvac_modes": ["off", "heat", "cool", "dry", "heat_cool", "fan_only"],
     "fan_modes": ["auto", "1", "2", "3", "4", "5"],
@@ -57,7 +67,9 @@ class Rig:
             **{f"{r}_enable": {"initial": True} for r in ROOMS},
         }})
         assert await async_setup_component(hass, "input_number", {"input_number": {
-            f"{r}_target": {"min": 50, "max": 90, "initial": 70} for r in ROOMS
+            **{f"{r}_target": {"min": 50, "max": 90, "initial": 70} for r in ROOMS},
+            **{f"{r}_heat_to": {"min": 50, "max": 90, "initial": 68} for r in ROOMS},
+            **{f"{r}_cool_to": {"min": 50, "max": 90, "initial": 74} for r in ROOMS},
         }})
         assert await async_setup_component(hass, "input_select", {"input_select": {
             "mxz_mode": {"options": ["cool", "heat"], "initial": "cool"},
@@ -293,3 +305,90 @@ async def test_sensor_change_alone_triggers_a_run(hass: HomeAssistant, freezer) 
     await rig.setup(rooms=3)
     await rig.set(SENSORS[2], 65)  # room 3's sensor; no explicit run
     assert rig.head(2).state == "heat"
+
+
+async def test_dual_setpoint_room(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.setup(**dual(1))
+    # Anywhere from Heat to (68) to Cool to (74), and inside the demand band
+    # past either, the room asks for nothing.
+    for temp in (66, 70, 76):
+        await rig.set(SENSORS[1], temp)
+        assert await rig.run() == []
+
+    # Past Heat to by more than the threshold: heat, driven from Heat to, the
+    # fan boosted by the distance below Heat to.
+    await rig.set(SENSORS[1], 64)
+    await rig.run()
+    assert rig.mode() == "heat"
+    bed = rig.head(1)
+    assert (bed.state, bed.attributes["temperature"], bed.attributes["fan_mode"]) == ("heat", 70, "5")
+
+    # It runs to Heat to, not to the middle of the range.
+    await rig.set(SENSORS[1], 67.5)
+    await rig.run()
+    assert rig.head(1).state == "heat"
+    await rig.set(SENSORS[1], 68)
+    await rig.run()
+    assert rig.head(1).state == "off"
+
+    # Past Cool to by more than the threshold: cool once the switch wait
+    # passes, driven from Cool to, and run down to Cool to.
+    await rig.set(SENSORS[1], 78)
+    await rig.run(after=601)
+    assert rig.mode() == "cool"
+    bed = rig.head(1)
+    assert (bed.state, bed.attributes["temperature"], bed.attributes["fan_mode"]) == ("cool", 72, "5")
+    await rig.set(SENSORS[1], 74.5)
+    await rig.run()
+    assert rig.head(1).state == "cool"
+    await rig.set(SENSORS[1], 74)
+    await rig.run()
+    assert rig.head(1).state == "fan_only"
+
+
+async def test_dual_and_single_rooms_share_the_mode(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.setup(**dual(1))
+    # The single-target room asks for cool; the dual room, at 72, is content.
+    await rig.set(SENSORS[0], 74)
+    await rig.set(SENSORS[1], 72)
+    await rig.run()
+    assert rig.mode() == "cool"
+    assert (rig.head(0).state, rig.head(1).state) == ("cool", "off")
+
+
+async def test_dual_gap_too_narrow_asks_for_nothing(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.setup(**dual(1))
+    await rig.set(HEAT_TOS[1], 70)
+    await rig.set(COOL_TOS[1], 71)
+    await rig.set(SENSORS[1], 60)
+    await rig.run()
+    assert rig.head(1).state == "off"
+    # Widening it to the least gap (2) lets the room run again.
+    await rig.set(COOL_TOS[1], 72)
+    await rig.run()
+    assert rig.head(1).state == "heat"
+
+
+@pytest.mark.parametrize("extra", [
+    {"room_2_heat_to": HEAT_TOS[1]},                          # target and half a pair
+    {"room_2_target": "", "room_2_heat_to": HEAT_TOS[1]},     # half a pair
+    {"room_2_heat_to": HEAT_TOS[1], "room_2_cool_to": COOL_TOS[1]},  # both kinds
+])
+async def test_mixed_targets_notify(hass: HomeAssistant, freezer, extra) -> None:
+    notes = await capture_notes(hass)
+    rig = Rig(hass, freezer)
+    await rig.setup(**extra)
+    await rig.set(SENSORS[1], 60)
+    assert await rig.run() == []
+    assert "Room 2: each room needs a head, sensor" in notes[-1]["message"]
+
+
+async def test_target_shared_with_heat_to_notifies(hass: HomeAssistant, freezer) -> None:
+    notes = await capture_notes(hass)
+    rig = Rig(hass, freezer)
+    await rig.setup(**(dual(1) | {"room_2_heat_to": TARGETS[0]}))
+    assert await rig.run() == []
+    assert f"Used by more than one room: {TARGETS[0]}" in notes[-1]["message"]

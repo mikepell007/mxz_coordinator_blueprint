@@ -33,15 +33,16 @@ The `plan` template ports these functions from upstream's
 Keep the behavior in step. When upstream releases, diff `logic.py` and `const.py`
 from that commit, port what matters, and update the commit in `NOTICE` and here.
 
-- `call` macro ← `room_call` / `call_edges` (cool checked first; lockouts move an edge out to the floor/ceiling)
+- `call` macro ← `room_call` / `call_edges` (cool checked first; lockouts move an edge out to the floor/ceiling). It takes `ht`/`ct`, the heat and cool side targets: Heat to / Cool to in a dual-setpoint room, the one target twice otherwise, as upstream's `heat_target`/`cool_target`.
 - engage block ← `engage_with_latch` (drift to start, band 0 to run to target, direction flip → satisfied)
 - shared-mode block ← `shared_mode` (standoff → first calling room in slot order; `min_switch_seconds` dwell; resting mode)
 - fan block ← `fan_for_delta` (step thresholds are `fan_step` × 1/2/3/4 up and × 0.5/1.5/2.5/3.5 down)
 - `act` chain ← `head_action`
+- setpoint `want` ← `setpoints` side choice (Heat to while heating, Cool to while cooling); fan `delta` ← `range_delta`
 
 Input defaults match upstream's °F defaults (`const.py`): drift 1, threshold 3,
 dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 up and
-0.5/1.5/2.5/3.5 down, clamp 59–88.
+0.5/1.5/2.5/3.5 down, clamp 59–88, dual-setpoint least gap 2.
 
 ## Deliberate differences (don't "fix" these toward upstream)
 
@@ -54,7 +55,12 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
 - Parks are emitted before runs, so the outdoor unit isn't asked for both directions at once.
 - An unavailable head's room makes no demand (no lost-vote TTL).
 - Up to 6 rooms (upstream allows 8).
-- Not ported: eco/away, standby hold, dual setpoint, safety priority, freeze floor,
+- **Dual setpoint is two helpers, not a climate range.** Upstream refuses or
+  pushes a too-narrow write (`resolve_range`); helpers can't be constrained, so a
+  pair under `dual_min_gap` makes the room ask for nothing (`problem` says why).
+  No midpoint target, `shift_range`, or switching a room between single and dual
+  at runtime; which kind a room is comes from which inputs are filled.
+- Not ported: eco/away, standby hold, safety priority, freeze floor,
   own-remote rooms, per-room thermostat entities.
 
 ## Blueprint specifics
@@ -67,19 +73,22 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
 - **Variables come back as Python literals, not JSON.** End `plan` with a bare
   dict (`{{ {...} }}`). `| tojson` makes `true`/`null`, which fails literal parsing,
   and `plan` silently becomes a string.
-- **Rooms are six fixed slots** (`room_N_head/sensor/target/enable`; 1–2 required,
-  3–6 default `""`). `slots` gathers them, `rooms_cfg` keeps slots with a head, and
-  `config_ok` rejects partly filled slots (`incomplete`) and entities used by two
-  rooms (`duplicates`); the plan loop skips rooms when it's false so the notification
-  can run. Slot number is priority. Adding a slot means touching the inputs, the four
-  triggers, and `slots`; nothing in `plan` changes.
+- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable`;
+  head, sensor, and enable required in 1–2, everything else default `""`). A room
+  has a target or a Heat to/Cool to pair, never both; `dual` in the plan is "no
+  target". `slots` gathers them, `rooms_cfg` keeps slots with a head, and
+  `config_ok` rejects partly filled slots (`incomplete`) and entities used twice
+  (`duplicates`; target, heat to, and cool to are one pool); the plan loop skips
+  rooms when it's false so the notification can run. Slot number is priority.
+  Adding a slot means touching the inputs, the six triggers, and `slots`; nothing
+  in `plan` changes.
 - **Room triggers are `state_changed` event triggers, not state triggers.** A state
   trigger on an optional slot saved as `""` or `null` (filled, then cleared in the UI)
   leaves the whole automation `unavailable`; an event trigger filtering
   `event_data.entity_id` doesn't care. Verified on HA 2026.10.4. They also fire on
   attribute-only changes, which `mode: single` and the settle delay absorb.
-- Each plan room carries `slot`, `sensor`, `target_entity`, and `enable_entity` so the
-  trace shows the pairing. Keep them when changing the plan.
+- Each plan room carries `slot`, `sensor`, `target_entity`, `heat_to_entity`,
+  `cool_to_entity`, and `enable_entity` so the trace shows the pairing. Keep them when changing the plan.
 - `tests/test_blueprint.py` asserts `automation.mxz` is `on` after setup: a blueprint
   that fails to load or attach leaves it `unavailable` without failing setup.
 - Jinja macros don't see outer `set` variables; pass everything in as arguments (see `call`).

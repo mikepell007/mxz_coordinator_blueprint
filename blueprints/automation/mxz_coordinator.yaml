@@ -11,7 +11,8 @@ blueprint:
 
     **Up to six rooms.** Each room's head, temperature sensor, target, and enable
     are picked together in its own section. Room 1 has the highest priority;
-    rooms 1 and 2 are required, and 3 to 6 are optional.
+    rooms 1 and 2 are required, and 3 to 6 are optional. For a dual-setpoint
+    room, leave Target blank and pick Heat to and Cool to instead.
 
 
     Create an input_select with exactly the options `heat` and `cool` for the
@@ -41,7 +42,26 @@ blueprint:
               device_class: temperature
         room_1_target:
           name: Room 1 target
-          description: An input_number holding the room's target.
+          description: >-
+            An input_number holding the room's target. Leave it blank if the
+            room uses Heat to and Cool to instead.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_1_heat_to:
+          name: Room 1 heat to (dual setpoint)
+          description: >-
+            Optional, with Cool to, in place of Target: an input_number the room
+            heats up to. Between Heat to and Cool to the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_1_cool_to:
+          name: Room 1 cool to (dual setpoint)
+          description: Optional, with Heat to, in place of Target. An input_number the room cools down to.
+          default: ""
           selector:
             entity:
               domain: input_number
@@ -71,7 +91,26 @@ blueprint:
               device_class: temperature
         room_2_target:
           name: Room 2 target
-          description: An input_number holding the room's target.
+          description: >-
+            An input_number holding the room's target. Leave it blank if the
+            room uses Heat to and Cool to instead.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_2_heat_to:
+          name: Room 2 heat to (dual setpoint)
+          description: >-
+            Optional, with Cool to, in place of Target: an input_number the room
+            heats up to. Between Heat to and Cool to the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_2_cool_to:
+          name: Room 2 cool to (dual setpoint)
+          description: Optional, with Heat to, in place of Target. An input_number the room cools down to.
+          default: ""
           selector:
             entity:
               domain: input_number
@@ -84,7 +123,7 @@ blueprint:
     room_3:
       name: Room 3
       icon: mdi:numeric-3-box-outline
-      description: Priority 3. Optional; leave all four blank to skip it.
+      description: Priority 3. Optional; leave it all blank to skip it.
       collapsed: true
       input:
         room_3_head:
@@ -104,7 +143,25 @@ blueprint:
               device_class: temperature
         room_3_target:
           name: Room 3 target
-          description: An input_number holding the room's target.
+          description: >-
+            An input_number holding the room's target. Leave it blank if the
+            room uses Heat to and Cool to instead.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_3_heat_to:
+          name: Room 3 heat to (dual setpoint)
+          description: >-
+            Optional, with Cool to, in place of Target: an input_number the room
+            heats up to. Between Heat to and Cool to the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_3_cool_to:
+          name: Room 3 cool to (dual setpoint)
+          description: Optional, with Heat to, in place of Target. An input_number the room cools down to.
           default: ""
           selector:
             entity:
@@ -119,7 +176,7 @@ blueprint:
     room_4:
       name: Room 4
       icon: mdi:numeric-4-box-outline
-      description: Priority 4. Optional; leave all four blank to skip it.
+      description: Priority 4. Optional; leave it all blank to skip it.
       collapsed: true
       input:
         room_4_head:
@@ -139,7 +196,25 @@ blueprint:
               device_class: temperature
         room_4_target:
           name: Room 4 target
-          description: An input_number holding the room's target.
+          description: >-
+            An input_number holding the room's target. Leave it blank if the
+            room uses Heat to and Cool to instead.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_4_heat_to:
+          name: Room 4 heat to (dual setpoint)
+          description: >-
+            Optional, with Cool to, in place of Target: an input_number the room
+            heats up to. Between Heat to and Cool to the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_4_cool_to:
+          name: Room 4 cool to (dual setpoint)
+          description: Optional, with Heat to, in place of Target. An input_number the room cools down to.
           default: ""
           selector:
             entity:
@@ -154,7 +229,7 @@ blueprint:
     room_5:
       name: Room 5
       icon: mdi:numeric-5-box-outline
-      description: Priority 5. Optional; leave all four blank to skip it.
+      description: Priority 5. Optional; leave it all blank to skip it.
       collapsed: true
       input:
         room_5_head:
@@ -174,7 +249,25 @@ blueprint:
               device_class: temperature
         room_5_target:
           name: Room 5 target
-          description: An input_number holding the room's target.
+          description: >-
+            An input_number holding the room's target. Leave it blank if the
+            room uses Heat to and Cool to instead.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_5_heat_to:
+          name: Room 5 heat to (dual setpoint)
+          description: >-
+            Optional, with Cool to, in place of Target: an input_number the room
+            heats up to. Between Heat to and Cool to the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_5_cool_to:
+          name: Room 5 cool to (dual setpoint)
+          description: Optional, with Heat to, in place of Target. An input_number the room cools down to.
           default: ""
           selector:
             entity:
@@ -189,7 +282,7 @@ blueprint:
     room_6:
       name: Room 6
       icon: mdi:numeric-6-box-outline
-      description: Priority 6. Optional; leave all four blank to skip it.
+      description: Priority 6. Optional; leave it all blank to skip it.
       collapsed: true
       input:
         room_6_head:
@@ -209,7 +302,25 @@ blueprint:
               device_class: temperature
         room_6_target:
           name: Room 6 target
-          description: An input_number holding the room's target.
+          description: >-
+            An input_number holding the room's target. Leave it blank if the
+            room uses Heat to and Cool to instead.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_6_heat_to:
+          name: Room 6 heat to (dual setpoint)
+          description: >-
+            Optional, with Cool to, in place of Target: an input_number the room
+            heats up to. Between Heat to and Cool to the room asks for nothing.
+          default: ""
+          selector:
+            entity:
+              domain: input_number
+        room_6_cool_to:
+          name: Room 6 cool to (dual setpoint)
+          description: Optional, with Heat to, in place of Target. An input_number the room cools down to.
           default: ""
           selector:
             entity:
@@ -251,6 +362,14 @@ blueprint:
           name: Mode switch threshold
           description: How far off target a room must be to ask for heat or cool.
           default: 3.0
+          selector:
+            number: {min: 0.5, max: 10, step: 0.5, unit_of_measurement: "°"}
+        dual_min_gap:
+          name: Least gap between heat to and cool to
+          description: >-
+            A dual-setpoint room whose Cool to is less than this above its Heat to
+            asks for nothing until it's fixed. 2 for °F, 1 for °C.
+          default: 2.0
           selector:
             number: {min: 0.5, max: 10, step: 0.5, unit_of_measurement: "°"}
         min_switch_seconds:
@@ -423,6 +542,14 @@ triggers:
   - trigger: event
     event_type: state_changed
     event_data:
+      entity_id: !input room_1_heat_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_1_cool_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
       entity_id: !input room_1_enable
   - trigger: event
     event_type: state_changed
@@ -436,6 +563,14 @@ triggers:
     event_type: state_changed
     event_data:
       entity_id: !input room_2_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_2_heat_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_2_cool_to
   - trigger: event
     event_type: state_changed
     event_data:
@@ -455,6 +590,14 @@ triggers:
   - trigger: event
     event_type: state_changed
     event_data:
+      entity_id: !input room_3_heat_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_3_cool_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
       entity_id: !input room_3_enable
   - trigger: event
     event_type: state_changed
@@ -468,6 +611,14 @@ triggers:
     event_type: state_changed
     event_data:
       entity_id: !input room_4_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_4_heat_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_4_cool_to
   - trigger: event
     event_type: state_changed
     event_data:
@@ -487,6 +638,14 @@ triggers:
   - trigger: event
     event_type: state_changed
     event_data:
+      entity_id: !input room_5_heat_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_5_cool_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
       entity_id: !input room_5_enable
   - trigger: event
     event_type: state_changed
@@ -500,6 +659,14 @@ triggers:
     event_type: state_changed
     event_data:
       entity_id: !input room_6_target
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_6_heat_to
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input room_6_cool_to
   - trigger: event
     event_type: state_changed
     event_data:
@@ -521,47 +688,68 @@ variables:
       head: !input room_1_head
       sensor: !input room_1_sensor
       target: !input room_1_target
+      heat_to: !input room_1_heat_to
+      cool_to: !input room_1_cool_to
       enable: !input room_1_enable
     - slot: 2
       head: !input room_2_head
       sensor: !input room_2_sensor
       target: !input room_2_target
+      heat_to: !input room_2_heat_to
+      cool_to: !input room_2_cool_to
       enable: !input room_2_enable
     - slot: 3
       head: !input room_3_head
       sensor: !input room_3_sensor
       target: !input room_3_target
+      heat_to: !input room_3_heat_to
+      cool_to: !input room_3_cool_to
       enable: !input room_3_enable
     - slot: 4
       head: !input room_4_head
       sensor: !input room_4_sensor
       target: !input room_4_target
+      heat_to: !input room_4_heat_to
+      cool_to: !input room_4_cool_to
       enable: !input room_4_enable
     - slot: 5
       head: !input room_5_head
       sensor: !input room_5_sensor
       target: !input room_5_target
+      heat_to: !input room_5_heat_to
+      cool_to: !input room_5_cool_to
       enable: !input room_5_enable
     - slot: 6
       head: !input room_6_head
       sensor: !input room_6_sensor
       target: !input room_6_target
+      heat_to: !input room_6_heat_to
+      cool_to: !input room_6_cool_to
       enable: !input room_6_enable
   rooms_cfg: "{{ slots | selectattr('head') | list }}"
-  # Slots with some but not all four entities filled in.
+  # Slots with something filled in but not a full room: a head, sensor, and
+  # enable, plus either a target or a Heat to / Cool to pair (not both).
   incomplete: >-
     {%- set ns = namespace(l=[]) -%}
     {%- for s in slots -%}
-      {%- set n = [s.head, s.sensor, s.target, s.enable] | select | list | length -%}
-      {%- if n not in [0, 4] -%}{%- set ns.l = ns.l + [s.slot] -%}{%- endif -%}
+      {%- set filled = [s.head, s.sensor, s.target, s.heat_to, s.cool_to, s.enable] | select | list -%}
+      {%- set single = s.target and not s.heat_to and not s.cool_to -%}
+      {%- set dual = not s.target and s.heat_to and s.cool_to -%}
+      {%- if filled and not (s.head and s.sensor and s.enable and (single or dual)) -%}
+        {%- set ns.l = ns.l + [s.slot] -%}
+      {%- endif -%}
     {%- endfor -%}
     {{ ns.l }}
+  # Entities used twice. Targets, Heat to, and Cool to are checked as one pool.
   duplicates: >-
     {%- set ns = namespace(l=[]) -%}
-    {%- for key in ['head', 'sensor', 'target', 'enable'] -%}
-      {%- set used = rooms_cfg | map(attribute=key) | list -%}
-      {%- for e in used | unique -%}
-        {%- if used | select('eq', e) | list | length > 1 -%}{%- set ns.l = ns.l + [e] -%}{%- endif -%}
+    {%- for keys in [['head'], ['sensor'], ['target', 'heat_to', 'cool_to'], ['enable']] -%}
+      {%- set pool = namespace(l=[]) -%}
+      {%- for key in keys -%}
+        {%- set pool.l = pool.l + (rooms_cfg | map(attribute=key) | select | list) -%}
+      {%- endfor -%}
+      {%- for e in pool.l | unique -%}
+        {%- if pool.l | select('eq', e) | list | length > 1 -%}{%- set ns.l = ns.l + [e] -%}{%- endif -%}
       {%- endfor -%}
     {%- endfor -%}
     {{ ns.l }}
@@ -569,6 +757,7 @@ variables:
   mode_helper: !input mode_helper
   drift: !input drift
   demand_threshold: !input demand_threshold
+  dual_min_gap: !input dual_min_gap
   min_switch_seconds: !input min_switch_seconds
   resting_mode: !input resting_mode
   idle_action: !input idle_action
@@ -597,12 +786,14 @@ variables:
   # latch); a head's time in fan_only is the coil dry timer; and its current
   # fan_mode is the fan step.
   plan: >-
-    {%- macro call(t, tgt, band, en, ok, neutral, hl, hf, cl, cc) -%}
+    {#- ht/ct are the heat side's and cool side's targets: Heat to and Cool to
+        in a dual-setpoint room, the one target twice otherwise. -#}
+    {%- macro call(t, ht, ct, band, en, ok, neutral, hl, hf, cl, cc) -%}
       {%- if not en -%}off
       {%- elif not ok -%}{{ neutral }}
       {%- else -%}
-        {%- set hb = tgt - band -%}
-        {%- set ca = tgt + band -%}
+        {%- set hb = ht - band -%}
+        {%- set ca = ct + band -%}
         {%- if hl -%}{%- set hb = [hb, hf] | min -%}{%- endif -%}
         {%- if cl -%}{%- set ca = [ca, cc] | max -%}{%- endif -%}
         {%- if t > ca -%}cool{%- elif t < hb -%}heat{%- else -%}{{ neutral }}{%- endif -%}
@@ -624,11 +815,16 @@ variables:
       {%- set sid = rc.sensor -%}
       {%- set sx = expand(sid) -%}
       {%- set t = states(sid) | float(none) -%}
-      {%- set tgt = states(rc.target) | float(none) -%}
+      {%- set dual = not rc.target -%}
+      {%- set tgt = none if dual else states(rc.target) | float(none) -%}
+      {%- set ht = states(rc.heat_to) | float(none) if dual else tgt -%}
+      {%- set ct = states(rc.cool_to) | float(none) if dual else tgt -%}
       {%- set en = is_state(rc.enable, 'on') -%}
       {%- set head_ok = hs is not none and hs.state not in ['unknown', 'unavailable'] -%}
       {%- set why = 'head unavailable' if not head_ok
-                    else 'no target' if tgt is none
+                    else 'no target' if ht is none or ct is none
+                    else 'cool to is less than ' ~ dual_min_gap ~ ' above heat to'
+                      if dual and ct - ht < dual_min_gap | float(0) - 0.000001
                     else 'sensor has no reading' if t is none else '' -%}
       {%- if not why and sensor_stale_minutes | float(0) > 0 and sx -%}
         {%- set quiet = (now() - (sx[0].last_reported or sx[0].last_updated)).total_seconds() / 60 -%}
@@ -637,11 +833,13 @@ variables:
         {%- endif -%}
       {%- endif -%}
       {%- set ok = not why -%}
-      {%- set demand = call(t, tgt, band, en, ok, 'neutral', hl, heat_floor, cl, cool_ceiling) | trim -%}
+      {%- set demand = call(t, ht, ct, band, en, ok, 'neutral', hl, heat_floor, cl, cool_ceiling) | trim -%}
       {%- if demand in ['heat', 'cool'] -%}{%- set ns.calls = ns.calls + [demand] -%}{%- endif -%}
       {%- set ns.rooms = ns.rooms + [{'slot': rc.slot, 'head': h, 'sensor': sid,
-                                      'target_entity': rc.target, 'enable_entity': rc.enable,
-                                      'temp': t, 'target': tgt, 'enabled': en,
+                                      'target_entity': rc.target, 'heat_to_entity': rc.heat_to,
+                                      'cool_to_entity': rc.cool_to, 'enable_entity': rc.enable,
+                                      'temp': t, 'dual': dual, 'target': tgt,
+                                      'heat_to': ht, 'cool_to': ct, 'enabled': en,
                                       'ok': ok, 'head_ok': head_ok, 'problem': why,
                                       'demand': demand, 'state': hs.state if head_ok else none}] -%}
     {%- endfor -%}
@@ -663,10 +861,10 @@ variables:
       {%- set h = r.head -%}
       {%- set prior = r.state if r.state in ['heat', 'cool'] else none -%}
       {%- if prior -%}
-        {%- set raw = call(r.temp, r.target, 0, r.enabled, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
+        {%- set raw = call(r.temp, r.heat_to, r.cool_to, 0, r.enabled, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
         {%- set engage = raw if raw in [prior, 'off'] else 'satisfied' -%}
       {%- else -%}
-        {%- set engage = call(r.temp, r.target, drift, r.enabled, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
+        {%- set engage = call(r.temp, r.heat_to, r.cool_to, drift, r.enabled, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
       {%- endif -%}
       {%- set modes = state_attr(h, 'hvac_modes') or [] -%}
       {%- set can_fan = 'fan_only' in modes -%}
@@ -697,7 +895,7 @@ variables:
         {%- set s = setpoint_step | float(1) -%}
         {%- set lo = [clamp_min, state_attr(h, 'min_temp') | float(clamp_min)] | max -%}
         {%- set hi = [clamp_max, state_attr(h, 'max_temp') | float(clamp_max)] | min -%}
-        {%- set want = r.target + drive_offset if mode == 'heat' else r.target - drive_offset -%}
+        {%- set want = r.heat_to + drive_offset if mode == 'heat' else r.cool_to - drive_offset -%}
         {%- set sp = ((([[want, lo] | max, hi] | min) / s) | round(0)) * s -%}
         {%- set cur_sp = state_attr(h, 'temperature') | float(none) -%}
         {%- if cur_sp is none or (cur_sp - sp) | abs >= s / 2 -%}
@@ -715,7 +913,9 @@ variables:
             {%- set f = namespace(i=0) -%}
             {%- for x in ladder.l -%}{%- if x == cur_fan -%}{%- set f.i = loop.index0 -%}{%- endif -%}{%- endfor -%}
             {%- set f.i = [f.i, top] | min -%}
-            {%- set delta = (r.temp - r.target) | abs -%}
+            {#- how far outside Heat to..Cool to (off target, for one target) -#}
+            {%- set delta = r.heat_to - r.temp if r.temp < r.heat_to
+                            else r.temp - r.cool_to if r.temp > r.cool_to else 0 -%}
             {%- for k in range(5) -%}
               {%- if f.i < top and delta >= (f.i + 1) * fan_step -%}{%- set f.i = f.i + 1 -%}{%- endif -%}
             {%- endfor -%}
@@ -749,7 +949,8 @@ actions:
             The automation is doing nothing until its rooms are fixed.
             {%- if incomplete %}
             Room {{ incomplete | join(', ') }}: each room needs a head, sensor,
-            target, and enable, or none of them.
+            enable, and either a target or both Heat to and Cool to (not both
+            kinds), or nothing at all.
             {%- endif %}
             {%- if duplicates %}
             Used by more than one room: {{ duplicates | join(', ') }}.

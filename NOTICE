@@ -6,8 +6,9 @@ ha-mxz-coordinator
 
 Source: https://github.com/dkpnw/ha-mxz-coordinator
 Used: commit f30a9aa (tag v3.12.1), custom_components/mxz_coordinator/logic.py:
-room_call, call_edges, engage_with_latch, shared_mode, fan_for_delta, and
-head_action, and the default settings in const.py. Ported to Jinja in
+room_call, call_edges, engage_with_latch, shared_mode, fan_for_delta,
+head_action, and the dual-setpoint side choice in setpoints and range_delta, and
+the default settings in const.py. Ported to Jinja in
 blueprints/automation/mxz_coordinator.yaml. The README's feature descriptions also
 follow that project's documentation.
 License: MIT, reproduced below as it appears in that repository.

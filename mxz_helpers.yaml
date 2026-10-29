@@ -2,6 +2,8 @@
 # (homeassistant: packages: !include_dir_named packages) or create the same
 # helpers in Settings -> Devices & services -> Helpers. Add a target and an
 # enable for each room you set up; °C users: min 10, max 31, step 0.5.
+# A dual-setpoint room uses a heat-to and a cool-to helper instead of a
+# target; the bedroom below is set up that way.
 input_boolean:
   mxz_enable:
     name: MXZ coordinator enable
@@ -28,10 +30,19 @@ input_number:
     step: 1
     unit_of_measurement: "°F"
     mode: box
-  mxz_bedroom_target:
-    name: MXZ Bedroom target
+  mxz_bedroom_heat_to:
+    name: MXZ Bedroom heat to
     min: 55
     max: 85
     step: 1
+    initial: 68
+    unit_of_measurement: "°F"
+    mode: box
+  mxz_bedroom_cool_to:
+    name: MXZ Bedroom cool to
+    min: 55
+    max: 85
+    step: 1
+    initial: 74
     unit_of_measurement: "°F"
     mode: box
