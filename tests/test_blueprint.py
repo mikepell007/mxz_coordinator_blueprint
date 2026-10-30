@@ -7,6 +7,7 @@ command to their own state, the way a cloud head eventually reports it.
 
 from __future__ import annotations
 
+import re
 import shutil
 from datetime import timedelta
 from pathlib import Path
@@ -708,3 +709,11 @@ async def test_coordinator_off_parks_nothing_and_tells_nothing(hass: HomeAssista
     assert await rig.run() == []
     assert rig.head(1).state == "dry"
     assert rig.notes == []
+
+
+def test_version_in_name_is_the_newest_in_the_changelog() -> None:
+    name = re.search(r"^  name: .* v(\d+\.\d+\.\d+)$", BLUEPRINT.read_text(), re.M)
+    assert name, "the blueprint's name must end in vMAJOR.MINOR.PATCH"
+    changelog = (BLUEPRINT.parents[2] / "CHANGELOG.md").read_text()
+    newest = re.search(r"^## (\d+\.\d+\.\d+) \(", changelog, re.M)
+    assert newest and newest[1] == name[1]

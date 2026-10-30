@@ -158,6 +158,12 @@ for the first 10 minutes, and a coil being cleaned gets a full clean time again.
 - **Stock AUTO must stay out of it.** Don't leave heads on `heat_cool`/auto; the
   blueprint puts enabled rooms back to its own mode.
 
+## Versions
+
+The blueprint's name ends in its version, so the blueprint list shows which one you
+have. To update, re-import the blueprint, then check [CHANGELOG.md](CHANGELOG.md):
+a major version change says what to re-save.
+
 ## Development
 
 ```bash
