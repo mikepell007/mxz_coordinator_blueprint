@@ -1,5 +1,5 @@
 blueprint:
-  name: MXZ Coordinator (cloud heads)
+  name: MXZ Coordinator (cloud heads) v1.0.0
   description: >-
     One shared heat or cool mode for the heads on a Mitsubishi multi-split outdoor
     unit, decided from your room sensors. Rooms that want the other mode wait, the

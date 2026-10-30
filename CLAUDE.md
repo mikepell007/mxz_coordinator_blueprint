@@ -15,6 +15,7 @@ when copying anything else from upstream.
 | `tests/test_blueprint.py` | Runs the blueprint in a real HA test instance (`pytest-homeassistant-custom-component`) with mock heads that apply commands to their own state. |
 | `mxz_helpers.yaml` | Example HA helpers: per-room targets and enables, `input_boolean.mxz_enable`, and `input_select.mxz_mode`. |
 | `README.md` | User-facing setup and caveats. |
+| `CHANGELOG.md` | One entry per version, with the rules for choosing the number and upgrade steps for major versions. |
 | `LICENSE`, `NOTICE` | MIT for this repo; upstream's MIT notice and what was ported, at which commit. |
 
 ## Commands
@@ -25,6 +26,14 @@ pytest
 ```
 
 Run `pytest` after every blueprint change. Last run on HA 2026.10.4 with Python 3.14.
+
+## Versioning
+
+The version lives in the blueprint's `name` (`... v1.0.0`), because HA's blueprint
+schema rejects a `version` key. Keep it out of the file name: saved automations
+point at the path. Each release bumps `name` and adds a `CHANGELOG.md` entry (a test
+checks the two match), then merges to `main`, and the merge commit is tagged
+`vX.Y.Z`. Renaming or removing an input or a select value is a major version.
 
 ## How the logic maps to upstream
 
