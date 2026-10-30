@@ -41,7 +41,7 @@ from that commit, port what matters, and update the commit in `NOTICE` and here.
 - setpoint `want` ← `setpoints` side choice (Heat to while heating, Cool to while cooling); fan `delta` ← `range_delta`
 
 Input defaults match upstream's °F defaults (`const.py`): drift 1, threshold 3,
-dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 up and
+dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coil clean, fan thresholds 1/2/3/4 up and
 0.5/1.5/2.5/3.5 down, clamp 59–88, dual-setpoint least gap 2.
 
 ## Deliberate differences (don't "fix" these toward upstream)
@@ -63,7 +63,7 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
 - **Doors and windows are ours, not upstream's.** A room's optional `open`
   binary_sensor, on for `open_delay_seconds` (measured from its `last_changed`),
   makes the room `open`: `call` gets `en` false (no demand, no engage) and the
-  `act` chain picks `off`, with no coil dry. `held` is a stopped head (not in
+  `act` chain picks `off`, with no coil clean. `held` is a stopped head (not in
   heat/cool) whose sensor is on but not yet `open`, or off for under
   `close_delay_seconds`: it gets no demand or engage and `act` `hold` (no
   command), so it can't start; a running head is never held. With no memory, the
@@ -79,7 +79,7 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
 
 - **No memory of its own; state comes from entities.** Shared mode = the
   `input_select` helper, switch clock = its `last_changed`, run-to-target latch =
-  the head being in heat/cool, coil dry timer = the head's time in `fan_only`, fan
+  the head being in heat/cool, coil clean timer = the head's time in `fan_only`, fan
   step = the head's current `fan_mode`. Don't add helpers for these without a reason;
   fewer helpers is the point.
 - **Variables come back as Python literals, not JSON.** End `plan` with a bare
@@ -105,6 +105,10 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
   that fails to load or attach leaves it `unavailable` without failing setup.
 - Jinja macros don't see outer `set` variables; pass everything in as arguments (see `call`).
 - Tests set `settle_seconds: 0`.
+- **"Clean", not "dry".** Mitsubishi calls running the fan after cooling "clean";
+  "dry" is a separate head mode (`hvac_mode: dry`) that the blueprint never selects.
+  Use "clean" in text and identifiers (`off_after_clean`, `coil_clean_minutes`).
+  Upstream's `off_after_dry` is the same behavior, so expect that name when diffing.
 - `source_url` and the README's import badge point at the blueprint on GitHub
   (`mikepell007/mxz_coordinator_blueprint`, branch `main`). Re-import pulls from
   there, so what's on `main` is what users get; rename or move the file and both

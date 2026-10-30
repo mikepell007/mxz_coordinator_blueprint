@@ -17,7 +17,7 @@ that controls the same heads.
 | One shared heat/cool mode, picked from every room | Yes: same threshold (3 °F) and run-to-target latch (1 °F drift) |
 | Standoff settled by room order, 10-minute wait between switches | Yes |
 | Room temperature sensors drive the decision | Yes, plus a setpoint drive offset (below) |
-| Satisfied/waiting room steps aside (`off_after_dry`, `fan_only`, `off`) | Yes |
+| Satisfied/waiting room steps aside (fan to clean the coil then off, `fan_only`, or `off`) | Yes |
 | Fan boost ladder | Yes, built from the head's own `fan_modes` |
 | Puts a head back after a remote press | Yes, on the next run |
 | Weather lockouts with safety floor/ceiling | Yes, from an outdoor sensor or weather entity |
@@ -76,7 +76,7 @@ that is on while any of them is open. For several contacts, make a group:
 sensor group**, add the room's door and window sensors, and leave **All
 entities** off so the group is on when any one is open (example in
 [mxz_helpers.yaml](mxz_helpers.yaml)). Once it has been on for **Door or window
-open delay** (60 s), the room's head is turned straight off, with no coil-dry
+open delay** (60 s), the room's head is turned straight off, with no coil-clean
 fan, and the room asks for nothing, so it can't flip the shared mode. If someone
 turns the head on while it's open, the next run turns it off again. One group
 can serve several rooms, such as an open plan living room and kitchen.
@@ -100,6 +100,15 @@ Each run's trace shows every room's slot, head, sensor, target, and enable, unde
 `powerful`, lower that setting. Heads with different fan lists get different
 speeds at the same step.
 
+**Coil clean is not dry mode.** After cooling, the blueprint can run a head's
+fan for a while to clean the coil (**Coil clean time**), using `fan_only`. That's
+separate from the head's own `dry` mode, which the blueprint never selects.
+
+**Upgrading from a version that called this "dry":** the setting's saved names
+changed, and an old automation keeps loading but skips the clean, so heads go
+straight to off after cooling. Open the automation, pick **When a room is done or
+waiting** again, set **Coil clean time** if you'd changed it, and save.
+
 ## How it remembers
 
 A blueprint has no memory of its own, so it reads it from entities:
@@ -109,11 +118,11 @@ A blueprint has no memory of its own, so it reads it from entities:
 | The shared mode | `input_select.mxz_mode`. Pick a mode there yourself to switch to it. |
 | When the mode last switched | That helper's last change |
 | Whether a room is mid-run | Whether its head is in the shared mode |
-| How long a coil has dried | How long its head has been in `fan_only` |
+| How long a coil has been cleaning | How long its head has been in `fan_only` |
 | The current fan step | The head's current fan mode |
 
 After a Home Assistant restart those clocks restart too: the mode can't switch
-for the first 10 minutes, and a drying coil gets a full dry time again.
+for the first 10 minutes, and a coil being cleaned gets a full clean time again.
 
 ## Cloud caveats
 

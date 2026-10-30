@@ -182,7 +182,7 @@ async def test_scenario(rig: Rig) -> None:
     assert rig.mode() == "cool"
     assert rig.head(0).state == "cool"
     assert rig.head(0).attributes["temperature"] == 68
-    assert rig.head(1).state == "off"  # it was heating, so no coil dry
+    assert rig.head(1).state == "off"  # it was heating, so no coil clean
 
     # Inside its drift but still above target: it keeps running, fan eased down.
     await rig.set(SENSORS[0], 70.4)
@@ -190,14 +190,14 @@ async def test_scenario(rig: Rig) -> None:
     assert rig.head(0).state == "cool"
     assert rig.head(0).attributes["fan_mode"] == "1"
 
-    # At target: the coil dries on fan_only. The waiting room keeps waiting
+    # At target: the coil cleans on fan_only. The waiting room keeps waiting
     # until the switch wait passes.
     await rig.set(SENSORS[0], 70)
     await rig.run()
     assert rig.head(0).state == "fan_only"
     assert rig.mode() == "cool"
 
-    # Ten minutes later: dry done, head off; the bedroom is served.
+    # Ten minutes later: clean done, head off; the bedroom is served.
     await rig.run(after=601)
     assert rig.head(0).state == "off"
     assert rig.mode() == "heat"
@@ -405,7 +405,7 @@ async def test_open_window_stops_the_room(hass: HomeAssistant, freezer) -> None:
     await rig.run()
     assert rig.head(1).state == "heat"
 
-    # Opened: nothing until the open delay passes, then straight off (no coil dry).
+    # Opened: nothing until the open delay passes, then straight off (no coil clean).
     await rig.set(OPEN, "on")
     await rig.run(after=30)
     assert rig.head(1).state == "heat"
@@ -496,7 +496,7 @@ async def test_open_room_makes_no_demand(hass: HomeAssistant, freezer) -> None:
     assert rig.head(1).state == "off"
 
 
-async def test_cooling_room_opened_skips_coil_dry(hass: HomeAssistant, freezer) -> None:
+async def test_cooling_room_opened_skips_coil_clean(hass: HomeAssistant, freezer) -> None:
     rig = Rig(hass, freezer)
     await rig.set(OPEN, "off")
     await rig.setup(room_1_open=OPEN, open_delay_seconds=0)

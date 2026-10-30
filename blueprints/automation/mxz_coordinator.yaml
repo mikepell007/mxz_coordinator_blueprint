@@ -455,15 +455,18 @@ blueprint:
       input:
         idle_action:
           name: When a room is done or waiting
-          default: off_after_dry
+          default: off_after_clean
           selector:
             select:
               options:
-                - {label: "Fan to dry the coil after cooling, then off", value: off_after_dry}
+                - {label: "Fan to clean the coil after cooling, then off", value: off_after_clean}
                 - {label: Fan only, value: fan_only}
                 - {label: "Off", value: "off"}
-        coil_dry_minutes:
-          name: Coil dry time
+        coil_clean_minutes:
+          name: Coil clean time
+          description: >-
+            How long the fan runs after cooling to clean the coil. This isn't the
+            head's dry mode, which the blueprint never selects.
           default: 10
           selector:
             number: {min: 1, max: 60, step: 1, unit_of_measurement: min}
@@ -870,7 +873,7 @@ variables:
   min_switch_seconds: !input min_switch_seconds
   resting_mode: !input resting_mode
   idle_action: !input idle_action
-  coil_dry_minutes: !input coil_dry_minutes
+  coil_clean_minutes: !input coil_clean_minutes
   disabled_action: !input disabled_action
   open_delay_seconds: !input open_delay_seconds
   close_delay_seconds: !input close_delay_seconds
@@ -894,7 +897,7 @@ variables:
   # fan_for_delta, and head_action. State between runs comes from entities:
   # the mode helper holds the shared mode and its last_changed is the switch
   # clock; a head in the shared mode is a room mid-run (the run-to-target
-  # latch); a head's time in fan_only is the coil dry timer; and its current
+  # latch); a head's time in fan_only is the coil clean timer; and its current
   # fan_mode is the fan step.
   plan: >-
     {#- ht/ct are the heat side's and cool side's targets: Heat to and Cool to
@@ -997,19 +1000,19 @@ variables:
       {%- elif not r.enabled -%}
         {%- set act = 'leave' if disabled_action == 'leave' else 'off' -%}
       {%- elif r.open -%}
-        {#- straight off, no coil dry: don't blow air out an open window -#}
+        {#- straight off, no coil clean: don't blow air out an open window -#}
         {%- set act = 'off' -%}
       {%- elif r.held -%}
-        {#- left as it is (off after an opening, or drying) until the close delay ends -#}
+        {#- left as it is (off after an opening, or cleaning) until the close delay ends -#}
         {%- set act = 'hold' -%}
       {%- elif run -%}
         {%- set act = mode -%}
       {%- elif idle_action == 'fan_only' and can_fan -%}
         {%- set act = 'fan_only' -%}
-      {%- elif idle_action == 'off_after_dry' and can_fan and r.state == 'cool' -%}
+      {%- elif idle_action == 'off_after_clean' and can_fan and r.state == 'cool' -%}
         {%- set act = 'fan_only' -%}
-      {%- elif idle_action == 'off_after_dry' and can_fan and r.state == 'fan_only'
-              and (now() - expand(h)[0].last_changed).total_seconds() < coil_dry_minutes | float(0) * 60 -%}
+      {%- elif idle_action == 'off_after_clean' and can_fan and r.state == 'fan_only'
+              and (now() - expand(h)[0].last_changed).total_seconds() < coil_clean_minutes | float(0) * 60 -%}
         {%- set act = 'fan_only' -%}
       {%- else -%}
         {%- set act = 'off' -%}
