@@ -38,6 +38,7 @@ from that commit, port what matters, and update the commit in `NOTICE` and here.
 - shared-mode block ← `shared_mode` (standoff → first calling room in slot order; `min_switch_seconds` dwell; resting mode)
 - fan block ← `fan_for_delta` (step thresholds are `fan_step` × 1/2/3/4 up and × 0.5/1.5/2.5/3.5 down)
 - `act` chain ← `head_action`
+- `in_dry`, `dry_vote`, `dry_parked` ← Allow Dry mode from upstream's open PR 56 (`coordinator.py` `_in_dry`, `_dry_settle`; `logic.py` `arbitrate`'s `engaged` gate for ordinary votes), at its commit `b177920`, version 3.15.0, unreleased. Recheck against upstream once it merges.
 - setpoint `want` ← `setpoints` side choice (Heat to while heating, Cool to while cooling); fan `delta` ← `range_delta`
 
 Input defaults match upstream's °F defaults (`const.py`): drift 1, threshold 3,
@@ -72,6 +73,15 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
   Ordered after "disabled", so a disabled room's `leave` still wins. Not in
   `duplicates`: one group may serve several rooms. A delay running out isn't a
   state change, so the 2-minute time pattern is what notices it.
+- **Allow Dry has no memory either.** `in_dry` is read from the head each run, so
+  the coil clean follows only a park from Dry (`act` sees `in_dry`), not someone
+  taking the head to `off` themselves (upstream owes a clean then). A switch caused
+  by a Dry vote restarts the dwell (upstream exempts vote flips), because the helper's
+  `last_changed` can't say who moved it. Parks repeat if the head still reports Dry
+  after the settle delay; the notification has a per-slot id, so that replaces it
+  rather than stacking. Open doors and windows beat Dry (`in_dry` needs not `open`;
+  `held` needs not `in_dry`). Upstream's manual fan hold has no counterpart: fan
+  step is already the head's current `fan_mode`.
 - Not ported: eco/away, standby hold, safety priority, freeze floor,
   own-remote rooms, per-room thermostat entities.
 
@@ -85,8 +95,9 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
 - **Variables come back as Python literals, not JSON.** End `plan` with a bare
   dict (`{{ {...} }}`). `| tojson` makes `true`/`null`, which fails literal parsing,
   and `plan` silently becomes a string.
-- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable/open`;
-  head, sensor, and enable required in 1–2, everything else default `""`). A room
+- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable/open/allow_dry`;
+  head, sensor, and enable required in 1–2, everything else default `""`, and
+  `allow_dry` default false). A room
   has a target or a Heat to/Cool to pair, never both; `dual` in the plan is "no
   target". `slots` gathers them, `rooms_cfg` keeps slots with a head, and
   `config_ok` rejects partly filled slots (`incomplete`) and entities used twice

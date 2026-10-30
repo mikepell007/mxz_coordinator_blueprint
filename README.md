@@ -91,6 +91,28 @@ soon as everything is shut.
 Both delays are checked on the 2-minute timer, so the head goes off, or back
 on, up to 2 minutes after a delay ends.
 
+**Dry mode.** The heads' own Dry (dehumidify) mode is something you pick; the
+blueprint never selects it. With a room's **allow Dry mode** off (the default), a
+head put in Dry is taken out of it on the next run. Turn it on for a room and,
+while that room is enabled, a head you put in Dry stays there:
+
+- The blueprint sends it no mode, setpoint, or fan commands, and the room's target
+  waits until the head leaves Dry.
+- Dry runs the outdoor unit the cooling way, so it shares with rooms that are
+  cooling. If no room is calling or mid-run, the head turns the shared mode to cool
+  once the wait between switches allows. Any room's call beats it, and **No cooling
+  at or below** stops it asking.
+- If another room needs heat, the Dry head gets the same treatment as a cooling
+  head that stops (coil clean, then off, with the default setting), and you get a
+  notification. Dry doesn't turn back on by itself. Heat that is only the resting
+  mode, with no room wanting it, stops nothing.
+- Open doors and windows stop it as they stop any head, past the open delay.
+
+Two limits from having no memory: a head you take out of Dry directly to `off`
+stays off with no coil clean (leave it in `fan_only` to get one), and a mode switch
+caused by a Dry head starts the wait between switches like any other, so a room
+calling for heat right after it waits too.
+
 Each run's trace shows every room's slot, head, sensor, target, and enable, under
 **Traces → Changed variables → plan**.
 
@@ -102,7 +124,7 @@ speeds at the same step.
 
 **Coil clean is not dry mode.** After cooling, the blueprint can run a head's
 fan for a while to clean the coil (**Coil clean time**), using `fan_only`. That's
-separate from the head's own `dry` mode, which the blueprint never selects.
+separate from the head's own `dry` mode, above.
 
 **Upgrading from a version that called this "dry":** the setting's saved names
 changed, and an old automation keeps loading but skips the clean, so heads go
