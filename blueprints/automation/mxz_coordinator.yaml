@@ -82,6 +82,17 @@ blueprint:
           selector:
             entity:
               domain: binary_sensor
+        room_1_allow_dry:
+          name: Room 1 allow Dry mode
+          description: >-
+            Off, a head someone puts in Dry is taken out of it on the next run. On,
+            while the room is enabled, it stays in Dry: the room's target waits, and
+            the head asks for cool only if no other room wants anything. If another
+            room needs heat, the head stops and Dry isn't turned back on. The
+            blueprint never selects Dry itself.
+          default: false
+          selector:
+            boolean: {}
     room_2:
       name: Room 2
       icon: mdi:numeric-2-box-outline
@@ -141,6 +152,17 @@ blueprint:
           selector:
             entity:
               domain: binary_sensor
+        room_2_allow_dry:
+          name: Room 2 allow Dry mode
+          description: >-
+            Off, a head someone puts in Dry is taken out of it on the next run. On,
+            while the room is enabled, it stays in Dry: the room's target waits, and
+            the head asks for cool only if no other room wants anything. If another
+            room needs heat, the head stops and Dry isn't turned back on. The
+            blueprint never selects Dry itself.
+          default: false
+          selector:
+            boolean: {}
     room_3:
       name: Room 3
       icon: mdi:numeric-3-box-outline
@@ -204,6 +226,17 @@ blueprint:
           selector:
             entity:
               domain: binary_sensor
+        room_3_allow_dry:
+          name: Room 3 allow Dry mode
+          description: >-
+            Off, a head someone puts in Dry is taken out of it on the next run. On,
+            while the room is enabled, it stays in Dry: the room's target waits, and
+            the head asks for cool only if no other room wants anything. If another
+            room needs heat, the head stops and Dry isn't turned back on. The
+            blueprint never selects Dry itself.
+          default: false
+          selector:
+            boolean: {}
     room_4:
       name: Room 4
       icon: mdi:numeric-4-box-outline
@@ -267,6 +300,17 @@ blueprint:
           selector:
             entity:
               domain: binary_sensor
+        room_4_allow_dry:
+          name: Room 4 allow Dry mode
+          description: >-
+            Off, a head someone puts in Dry is taken out of it on the next run. On,
+            while the room is enabled, it stays in Dry: the room's target waits, and
+            the head asks for cool only if no other room wants anything. If another
+            room needs heat, the head stops and Dry isn't turned back on. The
+            blueprint never selects Dry itself.
+          default: false
+          selector:
+            boolean: {}
     room_5:
       name: Room 5
       icon: mdi:numeric-5-box-outline
@@ -330,6 +374,17 @@ blueprint:
           selector:
             entity:
               domain: binary_sensor
+        room_5_allow_dry:
+          name: Room 5 allow Dry mode
+          description: >-
+            Off, a head someone puts in Dry is taken out of it on the next run. On,
+            while the room is enabled, it stays in Dry: the room's target waits, and
+            the head asks for cool only if no other room wants anything. If another
+            room needs heat, the head stops and Dry isn't turned back on. The
+            blueprint never selects Dry itself.
+          default: false
+          selector:
+            boolean: {}
     room_6:
       name: Room 6
       icon: mdi:numeric-6-box-outline
@@ -393,6 +448,17 @@ blueprint:
           selector:
             entity:
               domain: binary_sensor
+        room_6_allow_dry:
+          name: Room 6 allow Dry mode
+          description: >-
+            Off, a head someone puts in Dry is taken out of it on the next run. On,
+            while the room is enabled, it stays in Dry: the room's target waits, and
+            the head asks for cool only if no other room wants anything. If another
+            room needs heat, the head stops and Dry isn't turned back on. The
+            blueprint never selects Dry itself.
+          default: false
+          selector:
+            boolean: {}
     control:
       name: Coordinator
       icon: mdi:hvac
@@ -455,15 +521,18 @@ blueprint:
       input:
         idle_action:
           name: When a room is done or waiting
-          default: off_after_dry
+          default: off_after_clean
           selector:
             select:
               options:
-                - {label: "Fan to dry the coil after cooling, then off", value: off_after_dry}
+                - {label: "Fan to clean the coil after cooling, then off", value: off_after_clean}
                 - {label: Fan only, value: fan_only}
                 - {label: "Off", value: "off"}
-        coil_dry_minutes:
-          name: Coil dry time
+        coil_clean_minutes:
+          name: Coil clean time
+          description: >-
+            How long the fan runs after cooling to clean the coil. This isn't the
+            head's dry mode, which the blueprint never selects.
           default: 10
           selector:
             number: {min: 1, max: 60, step: 1, unit_of_measurement: min}
@@ -795,6 +864,7 @@ variables:
       cool_to: !input room_1_cool_to
       enable: !input room_1_enable
       open: !input room_1_open
+      allow_dry: !input room_1_allow_dry
     - slot: 2
       head: !input room_2_head
       sensor: !input room_2_sensor
@@ -803,6 +873,7 @@ variables:
       cool_to: !input room_2_cool_to
       enable: !input room_2_enable
       open: !input room_2_open
+      allow_dry: !input room_2_allow_dry
     - slot: 3
       head: !input room_3_head
       sensor: !input room_3_sensor
@@ -811,6 +882,7 @@ variables:
       cool_to: !input room_3_cool_to
       enable: !input room_3_enable
       open: !input room_3_open
+      allow_dry: !input room_3_allow_dry
     - slot: 4
       head: !input room_4_head
       sensor: !input room_4_sensor
@@ -819,6 +891,7 @@ variables:
       cool_to: !input room_4_cool_to
       enable: !input room_4_enable
       open: !input room_4_open
+      allow_dry: !input room_4_allow_dry
     - slot: 5
       head: !input room_5_head
       sensor: !input room_5_sensor
@@ -827,6 +900,7 @@ variables:
       cool_to: !input room_5_cool_to
       enable: !input room_5_enable
       open: !input room_5_open
+      allow_dry: !input room_5_allow_dry
     - slot: 6
       head: !input room_6_head
       sensor: !input room_6_sensor
@@ -835,6 +909,7 @@ variables:
       cool_to: !input room_6_cool_to
       enable: !input room_6_enable
       open: !input room_6_open
+      allow_dry: !input room_6_allow_dry
   rooms_cfg: "{{ slots | selectattr('head') | list }}"
   # Slots with something filled in but not a full room: a head, sensor, and
   # enable, plus either a target or a Heat to / Cool to pair (not both).
@@ -870,7 +945,7 @@ variables:
   min_switch_seconds: !input min_switch_seconds
   resting_mode: !input resting_mode
   idle_action: !input idle_action
-  coil_dry_minutes: !input coil_dry_minutes
+  coil_clean_minutes: !input coil_clean_minutes
   disabled_action: !input disabled_action
   open_delay_seconds: !input open_delay_seconds
   close_delay_seconds: !input close_delay_seconds
@@ -894,7 +969,7 @@ variables:
   # fan_for_delta, and head_action. State between runs comes from entities:
   # the mode helper holds the shared mode and its last_changed is the switch
   # clock; a head in the shared mode is a room mid-run (the run-to-target
-  # latch); a head's time in fan_only is the coil dry timer; and its current
+  # latch); a head's time in fan_only is the coil clean timer; and its current
   # fan_mode is the fan step.
   plan: >-
     {#- ht/ct are the heat side's and cool side's targets: Heat to and Cool to
@@ -910,7 +985,8 @@ variables:
         {%- if t > ca -%}cool{%- elif t < hb -%}heat{%- else -%}{{ neutral }}{%- endif -%}
       {%- endif -%}
     {%- endmacro -%}
-    {%- set ns = namespace(rooms=[], calls=[], parks=[], runs=[], od=none) -%}
+    {%- set ns = namespace(rooms=[], calls=[], parks=[], runs=[], od=none,
+                           dry_vote=false, engaged=false, heat_for=none) -%}
     {%- if outdoor -%}
       {%- set ns.od = (state_attr(outdoor, 'temperature') if outdoor.startswith('weather.')
                        else states(outdoor)) | float(none) -%}
@@ -937,10 +1013,13 @@ variables:
       {%- set ox = expand(rc.open) if rc.open else [] -%}
       {%- set oage = (now() - ox[0].last_changed).total_seconds() if ox else 0 -%}
       {%- set open = ox | length > 0 and ox[0].state == 'on' and oage >= open_delay_seconds | float(0) -%}
+      {#- in_dry: someone has this head in Dry and the room lets it stay. Open
+          doors and windows still stop it. -#}
+      {%- set in_dry = rc.allow_dry and en and not open and head_ok and hs.state == 'dry' -%}
       {#- held: open but not yet for the open delay, or closed for less than the
           close delay, while the head isn't running. It doesn't start; a running
           head carries on. -#}
-      {%- set held = ox | length > 0 and head_ok and hs.state not in ['heat', 'cool']
+      {%- set held = ox | length > 0 and head_ok and not in_dry and hs.state not in ['heat', 'cool']
                      and ((ox[0].state == 'on' and not open)
                           or (ox[0].state == 'off' and oage < close_delay_seconds | float(0))) -%}
       {%- set why = 'head unavailable' if not head_ok
@@ -955,16 +1034,33 @@ variables:
         {%- endif -%}
       {%- endif -%}
       {%- set ok = not why -%}
-      {%- set demand = call(t, ht, ct, band, en and not open and not held, ok, 'neutral', hl, heat_floor, cl, cool_ceiling) | trim -%}
+      {%- set live = en and not open and not held -%}
+      {%- set demand = 'neutral' if in_dry else call(t, ht, ct, band, live, ok, 'neutral', hl, heat_floor, cl, cool_ceiling) | trim -%}
       {%- if demand in ['heat', 'cool'] -%}{%- set ns.calls = ns.calls + [demand] -%}{%- endif -%}
+      {%- set prior = hs.state if head_ok and hs.state in ['heat', 'cool'] else none -%}
+      {%- if in_dry -%}
+        {#- the room's target waits until the head leaves Dry -#}
+        {%- set engage = 'satisfied' -%}
+      {%- elif prior -%}
+        {%- set raw = call(t, ht, ct, 0, live, ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
+        {%- set engage = raw if raw in [prior, 'off'] else 'satisfied' -%}
+      {%- else -%}
+        {%- set engage = call(t, ht, ct, drift, live, ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
+      {%- endif -%}
+      {%- if engage in ['heat', 'cool'] -%}{%- set ns.engaged = true -%}{%- endif -%}
+      {%- if ns.heat_for is none and 'heat' in [demand, engage] -%}{%- set ns.heat_for = h -%}{%- endif -%}
+      {#- Dry runs the outdoor unit the cooling way: a cool vote, unless cool is locked out -#}
+      {%- set dry_vote = 'cool' if in_dry and not cl else none -%}
+      {%- if dry_vote -%}{%- set ns.dry_vote = true -%}{%- endif -%}
       {%- set ns.rooms = ns.rooms + [{'slot': rc.slot, 'head': h, 'sensor': sid,
                                       'target_entity': rc.target, 'heat_to_entity': rc.heat_to,
                                       'cool_to_entity': rc.cool_to, 'enable_entity': rc.enable,
                                       'open_entity': rc.open, 'open': open, 'held': held,
+                                      'allow_dry': rc.allow_dry, 'in_dry': in_dry, 'dry_vote': dry_vote,
                                       'temp': t, 'dual': dual, 'target': tgt,
                                       'heat_to': ht, 'cool_to': ct, 'enabled': en,
                                       'ok': ok, 'head_ok': head_ok, 'problem': why,
-                                      'demand': demand, 'state': hs.state if head_ok else none}] -%}
+                                      'demand': demand, 'engage': engage, 'state': hs.state if head_ok else none}] -%}
     {%- endfor -%}
     {#- shared mode -#}
     {%- set mx = expand(mode_helper) -%}
@@ -975,20 +1071,19 @@ variables:
     {%- set any_heat = 'heat' in ns.calls -%}
     {%- set standoff = any_cool and any_heat -%}
     {%- set rest = resting_mode if resting_mode in ['heat', 'cool'] else cur -%}
-    {%- set proposed = ns.calls[0] if standoff else 'cool' if any_cool else 'heat' if any_heat else rest -%}
+    {#- a Dry head's vote only counts when no room is calling or mid-run -#}
+    {%- set dry_cool = ns.dry_vote and not ns.calls and not ns.engaged -%}
+    {%- set proposed = ns.calls[0] if standoff else 'cool' if any_cool else 'heat' if any_heat else 'cool' if dry_cool else rest -%}
     {%- set still = (cur == 'cool' and any_cool) or (cur == 'heat' and any_heat) -%}
     {%- set mode = proposed if proposed != cur and allowed and (standoff or not still) else cur -%}
     {#- engage, action, and commands per head -#}
     {%- set ns.out = [] -%}
+    {#- the outdoor unit can't run a Dry head while it heats for another room.
+        Heat that is only the resting mode parks nothing. -#}
+    {%- set dry_parked = mode == 'heat' and ns.heat_for is not none -%}
     {%- for r in ns.rooms -%}
       {%- set h = r.head -%}
-      {%- set prior = r.state if r.state in ['heat', 'cool'] else none -%}
-      {%- if prior -%}
-        {%- set raw = call(r.temp, r.heat_to, r.cool_to, 0, r.enabled and not r.open and not r.held, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
-        {%- set engage = raw if raw in [prior, 'off'] else 'satisfied' -%}
-      {%- else -%}
-        {%- set engage = call(r.temp, r.heat_to, r.cool_to, drift, r.enabled and not r.open and not r.held, r.ok, 'satisfied', hl, heat_floor, cl, cool_ceiling) | trim -%}
-      {%- endif -%}
+      {%- set engage = r.engage -%}
       {%- set modes = state_attr(h, 'hvac_modes') or [] -%}
       {%- set can_fan = 'fan_only' in modes -%}
       {%- set run = r.head_ok and r.enabled and not r.open and not r.held and engage == mode -%}
@@ -997,19 +1092,22 @@ variables:
       {%- elif not r.enabled -%}
         {%- set act = 'leave' if disabled_action == 'leave' else 'off' -%}
       {%- elif r.open -%}
-        {#- straight off, no coil dry: don't blow air out an open window -#}
+        {#- straight off, no coil clean: don't blow air out an open window -#}
         {%- set act = 'off' -%}
+      {%- elif r.in_dry and not dry_parked -%}
+        {#- someone's Dry: no mode, setpoint, or fan command -#}
+        {%- set act = 'dry' -%}
       {%- elif r.held -%}
-        {#- left as it is (off after an opening, or drying) until the close delay ends -#}
+        {#- left as it is (off after an opening, or cleaning) until the close delay ends -#}
         {%- set act = 'hold' -%}
       {%- elif run -%}
         {%- set act = mode -%}
       {%- elif idle_action == 'fan_only' and can_fan -%}
         {%- set act = 'fan_only' -%}
-      {%- elif idle_action == 'off_after_dry' and can_fan and r.state == 'cool' -%}
+      {%- elif idle_action == 'off_after_clean' and can_fan and (r.state == 'cool' or r.in_dry) -%}
         {%- set act = 'fan_only' -%}
-      {%- elif idle_action == 'off_after_dry' and can_fan and r.state == 'fan_only'
-              and (now() - expand(h)[0].last_changed).total_seconds() < coil_dry_minutes | float(0) * 60 -%}
+      {%- elif idle_action == 'off_after_clean' and can_fan and r.state == 'fan_only'
+              and (now() - expand(h)[0].last_changed).total_seconds() < coil_clean_minutes | float(0) * 60 -%}
         {%- set act = 'fan_only' -%}
       {%- else -%}
         {%- set act = 'off' -%}
@@ -1059,13 +1157,15 @@ variables:
         {%- endif -%}
         {%- set info = {'setpoint': sp, 'fan': fan} -%}
       {%- endif -%}
-      {%- set ns.out = ns.out + [dict(r, engage=engage, action=act, **info)] -%}
+      {%- set dry = none if not r.in_dry else 'parked' if dry_parked else 'kept' -%}
+      {%- set ns.out = ns.out + [dict(r, action=act, dry=dry, **info)] -%}
     {%- endfor -%}
     {#- parks go first, so the outdoor unit is never asked for both directions.
         Output a dict, not tojson: HA reads variables back as Python literals. -#}
     {{ {'mode': mode, 'previous': cur, 'proposed': proposed, 'standoff': standoff,
         'mode_change_allowed': allowed, 'outdoor': ns.od, 'heat_lockout': hl,
-        'cool_lockout': cl, 'rooms': ns.out, 'commands': ns.parks + ns.runs} }}
+        'cool_lockout': cl, 'heat_for': ns.heat_for, 'rooms': ns.out,
+        'commands': ns.parks + ns.runs} }}
 
 actions:
   - if: "{{ not config_ok }}"
@@ -1106,6 +1206,18 @@ actions:
             entity_id: "{{ repeat.item.entity }}"
           data: "{{ repeat.item.data }}"
           continue_on_error: true
+  - repeat:
+      for_each: "{{ plan.rooms | selectattr('dry', 'eq', 'parked') | list }}"
+      sequence:
+        - action: persistent_notification.create
+          data:
+            notification_id: "mxz_coordinator_dry_{{ repeat.item.slot }}"
+            title: MXZ Coordinator
+            message: >-
+              {{ state_attr(repeat.item.head, 'friendly_name') or repeat.item.head }}
+              left Dry: the outdoor unit is heating for
+              {{ state_attr(plan.heat_for, 'friendly_name') or plan.heat_for }}.
+              Dry won't turn back on by itself; choose it again when you want it.
   - if: "{{ plan.commands | length > 0 }}"
     then:
       - delay:

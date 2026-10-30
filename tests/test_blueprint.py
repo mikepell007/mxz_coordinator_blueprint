@@ -182,7 +182,7 @@ async def test_scenario(rig: Rig) -> None:
     assert rig.mode() == "cool"
     assert rig.head(0).state == "cool"
     assert rig.head(0).attributes["temperature"] == 68
-    assert rig.head(1).state == "off"  # it was heating, so no coil dry
+    assert rig.head(1).state == "off"  # it was heating, so no coil clean
 
     # Inside its drift but still above target: it keeps running, fan eased down.
     await rig.set(SENSORS[0], 70.4)
@@ -190,14 +190,14 @@ async def test_scenario(rig: Rig) -> None:
     assert rig.head(0).state == "cool"
     assert rig.head(0).attributes["fan_mode"] == "1"
 
-    # At target: the coil dries on fan_only. The waiting room keeps waiting
+    # At target: the coil cleans on fan_only. The waiting room keeps waiting
     # until the switch wait passes.
     await rig.set(SENSORS[0], 70)
     await rig.run()
     assert rig.head(0).state == "fan_only"
     assert rig.mode() == "cool"
 
-    # Ten minutes later: dry done, head off; the bedroom is served.
+    # Ten minutes later: clean done, head off; the bedroom is served.
     await rig.run(after=601)
     assert rig.head(0).state == "off"
     assert rig.mode() == "heat"
@@ -405,7 +405,7 @@ async def test_open_window_stops_the_room(hass: HomeAssistant, freezer) -> None:
     await rig.run()
     assert rig.head(1).state == "heat"
 
-    # Opened: nothing until the open delay passes, then straight off (no coil dry).
+    # Opened: nothing until the open delay passes, then straight off (no coil clean).
     await rig.set(OPEN, "on")
     await rig.run(after=30)
     assert rig.head(1).state == "heat"
@@ -496,7 +496,7 @@ async def test_open_room_makes_no_demand(hass: HomeAssistant, freezer) -> None:
     assert rig.head(1).state == "off"
 
 
-async def test_cooling_room_opened_skips_coil_dry(hass: HomeAssistant, freezer) -> None:
+async def test_cooling_room_opened_skips_coil_clean(hass: HomeAssistant, freezer) -> None:
     rig = Rig(hass, freezer)
     await rig.set(OPEN, "off")
     await rig.setup(room_1_open=OPEN, open_delay_seconds=0)
@@ -526,3 +526,185 @@ async def test_open_sensor_alone_is_a_partly_filled_room(hass: HomeAssistant, fr
     await rig.setup(room_3_open=OPEN)
     assert await rig.run() == []
     assert "Room 3: each room needs a head, sensor" in notes[-1]["message"]
+
+
+DRY = {"room_2_allow_dry": True}
+
+
+async def dry_rig(hass: HomeAssistant, freezer, **overrides) -> Rig:
+    rig = Rig(hass, freezer)
+    rig.notes = await capture_notes(hass)
+    await rig.setup(**DRY, **overrides)
+    return rig
+
+
+async def heat_mode(rig: Rig, settled: bool = True) -> None:
+    """Rest the shared mode on heat, with the mode-switch wait over if settled."""
+    await rig.set("input_select.mxz_mode", "heat")
+    if settled:
+        rig.tick(601)
+
+
+async def test_dry_without_the_option_is_taken_out(rig: Rig) -> None:
+    await rig.set(HEADS[1], "dry")
+    await rig.run()
+    assert rig.head(1).state == "off"  # no coil clean owed without the option
+
+
+async def test_allowed_dry_is_left_alone_and_the_target_waits(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    await rig.set(HEADS[1], "dry")
+    await rig.set(SENSORS[1], 80)
+    assert await rig.run() == []
+    assert rig.head(1).state == "dry"
+    # Out of Dry, the room's target counts again.
+    await rig.set(HEADS[1], "off")
+    await rig.run()
+    assert rig.head(1).state == "cool"
+
+
+async def test_dry_votes_cool_when_nobody_calls(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    await heat_mode(rig)
+    await rig.set(HEADS[1], "dry")
+    assert await rig.run() == []
+    assert rig.mode() == "cool"
+    assert rig.head(1).state == "dry"
+
+
+async def test_resting_heat_inside_the_wait_parks_nothing(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    await heat_mode(rig, settled=False)
+    await rig.set(HEADS[1], "dry")
+    assert await rig.run() == []
+    assert rig.mode() == "heat"
+    assert rig.head(1).state == "dry"
+    await rig.run(after=601)
+    assert rig.mode() == "cool"
+
+
+async def test_cool_lockout_blocks_the_dry_vote(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer, outdoor="sensor.outdoor")
+    await rig.set("sensor.outdoor", 40, {"device_class": "temperature"})
+    await heat_mode(rig)
+    await rig.set(HEADS[1], "dry")
+    assert await rig.run() == []
+    assert rig.mode() == "heat"
+    assert rig.head(1).state == "dry"
+
+
+async def test_heat_call_parks_dry_once_and_never_restores_it(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    notes = rig.notes
+    await rig.set(HEADS[1], "dry")
+    await rig.run()
+    await rig.set(SENSORS[0], 66)
+    await rig.run()
+    assert rig.mode() == "heat"
+    assert rig.head(0).state == "heat"
+    assert rig.head(1).state == "fan_only"  # Dry wets the coil, so it gets the clean
+    assert len(notes) == 1
+    assert notes[0]["notification_id"] == "mxz_coordinator_dry_2"
+    assert HEADS[1] in notes[0]["message"] and HEADS[0] in notes[0]["message"]
+    await rig.run(after=601)
+    assert rig.head(1).state == "off"
+    # Heat is over: nothing puts Dry back.
+    await rig.set(SENSORS[0], 70)
+    await rig.run(after=601)
+    assert rig.head(1).state == "off"
+    assert len(notes) == 1
+
+
+async def test_dry_vote_flip_starts_the_switch_wait(hass: HomeAssistant, freezer) -> None:
+    """No memory of who moved the mode, so a heat call waits, and Dry stays meanwhile."""
+    rig = await dry_rig(hass, freezer)
+    await heat_mode(rig)
+    await rig.set(HEADS[1], "dry")
+    await rig.run()
+    assert rig.mode() == "cool"
+    await rig.set(SENSORS[0], 66)
+    await rig.run()
+    assert rig.mode() == "cool"
+    assert rig.head(1).state == "dry"
+    await rig.run(after=601)
+    assert rig.mode() == "heat"
+    assert rig.head(1).state == "fan_only"
+
+
+async def test_room_mid_heat_run_keeps_the_mode_and_parks_dry(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    await rig.set(SENSORS[0], 66)
+    await rig.run()
+    assert rig.head(0).state == "heat"
+    # Back inside its band, no longer calling, still running to target.
+    await rig.set(SENSORS[0], 69.5)
+    # With the switch wait over, only the run itself keeps the Dry vote out.
+    rig.tick(601)
+    await rig.set(HEADS[1], "dry")
+    await rig.run()
+    assert rig.mode() == "heat"
+    assert rig.head(0).state == "heat"
+    assert rig.head(1).state == "fan_only"
+
+
+async def test_dry_shares_the_outdoor_unit_with_cool(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    await rig.set(HEADS[1], "dry")
+    await rig.set(SENSORS[0], 74)
+    await rig.run()
+    assert rig.head(0).state == "cool"
+    assert rig.head(1).state == "dry"
+
+
+async def test_leaving_dry_for_fan_only_gets_the_coil_clean(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    await rig.set(HEADS[1], "dry")
+    await rig.run()
+    await rig.set(HEADS[1], "fan_only")
+    assert await rig.run() == []
+    assert rig.head(1).state == "fan_only"
+    await rig.run(after=601)
+    assert rig.head(1).state == "off"
+
+
+async def test_leaving_dry_for_off_stays_off(hass: HomeAssistant, freezer) -> None:
+    """No memory that it was in Dry, so no coil clean: a difference from upstream."""
+    rig = await dry_rig(hass, freezer)
+    await rig.set(HEADS[1], "dry")
+    await rig.run()
+    await rig.set(HEADS[1], "off")
+    assert await rig.run() == []
+    assert rig.head(1).state == "off"
+
+
+async def test_disabled_room_is_taken_out_of_dry(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    await rig.set(ENABLES[1], "off")
+    await rig.set(HEADS[1], "dry")
+    await rig.run()
+    assert rig.head(1).state == "off"
+
+
+async def test_open_window_stops_dry_with_no_clean(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer, room_2_open=OPEN)
+    await rig.set(OPEN, "off")
+    # Inside the close delay: someone's Dry is left running.
+    await rig.set(HEADS[1], "dry")
+    assert await rig.run() == []
+    assert rig.head(1).state == "dry"
+    # Open, under the open delay: it carries on, as a running head does.
+    await rig.set(OPEN, "on")
+    assert await rig.run() == []
+    assert rig.head(1).state == "dry"
+    await rig.run(after=61)
+    assert rig.head(1).state == "off"
+
+
+async def test_coordinator_off_parks_nothing_and_tells_nothing(hass: HomeAssistant, freezer) -> None:
+    rig = await dry_rig(hass, freezer)
+    await rig.set("input_boolean.mxz_enable", "off")
+    await rig.set(HEADS[1], "dry")
+    await rig.set(SENSORS[0], 66)
+    assert await rig.run() == []
+    assert rig.head(1).state == "dry"
+    assert rig.notes == []

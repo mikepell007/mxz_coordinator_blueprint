@@ -38,10 +38,11 @@ from that commit, port what matters, and update the commit in `NOTICE` and here.
 - shared-mode block ← `shared_mode` (standoff → first calling room in slot order; `min_switch_seconds` dwell; resting mode)
 - fan block ← `fan_for_delta` (step thresholds are `fan_step` × 1/2/3/4 up and × 0.5/1.5/2.5/3.5 down)
 - `act` chain ← `head_action`
+- `in_dry`, `dry_vote`, `dry_parked` ← Allow Dry mode from upstream's open PR 56 (`coordinator.py` `_in_dry`, `_dry_settle`; `logic.py` `arbitrate`'s `engaged` gate for ordinary votes), at its commit `b177920`, version 3.15.0, unreleased. Recheck against upstream once it merges.
 - setpoint `want` ← `setpoints` side choice (Heat to while heating, Cool to while cooling); fan `delta` ← `range_delta`
 
 Input defaults match upstream's °F defaults (`const.py`): drift 1, threshold 3,
-dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 up and
+dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coil clean, fan thresholds 1/2/3/4 up and
 0.5/1.5/2.5/3.5 down, clamp 59–88, dual-setpoint least gap 2.
 
 ## Deliberate differences (don't "fix" these toward upstream)
@@ -63,7 +64,7 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
 - **Doors and windows are ours, not upstream's.** A room's optional `open`
   binary_sensor, on for `open_delay_seconds` (measured from its `last_changed`),
   makes the room `open`: `call` gets `en` false (no demand, no engage) and the
-  `act` chain picks `off`, with no coil dry. `held` is a stopped head (not in
+  `act` chain picks `off`, with no coil clean. `held` is a stopped head (not in
   heat/cool) whose sensor is on but not yet `open`, or off for under
   `close_delay_seconds`: it gets no demand or engage and `act` `hold` (no
   command), so it can't start; a running head is never held. With no memory, the
@@ -72,6 +73,15 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
   Ordered after "disabled", so a disabled room's `leave` still wins. Not in
   `duplicates`: one group may serve several rooms. A delay running out isn't a
   state change, so the 2-minute time pattern is what notices it.
+- **Allow Dry has no memory either.** `in_dry` is read from the head each run, so
+  the coil clean follows only a park from Dry (`act` sees `in_dry`), not someone
+  taking the head to `off` themselves (upstream owes a clean then). A switch caused
+  by a Dry vote restarts the dwell (upstream exempts vote flips), because the helper's
+  `last_changed` can't say who moved it. Parks repeat if the head still reports Dry
+  after the settle delay; the notification has a per-slot id, so that replaces it
+  rather than stacking. Open doors and windows beat Dry (`in_dry` needs not `open`;
+  `held` needs not `in_dry`). Upstream's manual fan hold has no counterpart: fan
+  step is already the head's current `fan_mode`.
 - Not ported: eco/away, standby hold, safety priority, freeze floor,
   own-remote rooms, per-room thermostat entities.
 
@@ -79,14 +89,15 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
 
 - **No memory of its own; state comes from entities.** Shared mode = the
   `input_select` helper, switch clock = its `last_changed`, run-to-target latch =
-  the head being in heat/cool, coil dry timer = the head's time in `fan_only`, fan
+  the head being in heat/cool, coil clean timer = the head's time in `fan_only`, fan
   step = the head's current `fan_mode`. Don't add helpers for these without a reason;
   fewer helpers is the point.
 - **Variables come back as Python literals, not JSON.** End `plan` with a bare
   dict (`{{ {...} }}`). `| tojson` makes `true`/`null`, which fails literal parsing,
   and `plan` silently becomes a string.
-- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable/open`;
-  head, sensor, and enable required in 1–2, everything else default `""`). A room
+- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable/open/allow_dry`;
+  head, sensor, and enable required in 1–2, everything else default `""`, and
+  `allow_dry` default false). A room
   has a target or a Heat to/Cool to pair, never both; `dual` in the plan is "no
   target". `slots` gathers them, `rooms_cfg` keeps slots with a head, and
   `config_ok` rejects partly filled slots (`incomplete`) and entities used twice
@@ -105,6 +116,10 @@ dwell 600 s, idle `off_after_dry` with 10 min coil dry, fan thresholds 1/2/3/4 u
   that fails to load or attach leaves it `unavailable` without failing setup.
 - Jinja macros don't see outer `set` variables; pass everything in as arguments (see `call`).
 - Tests set `settle_seconds: 0`.
+- **"Clean", not "dry".** Mitsubishi calls running the fan after cooling "clean";
+  "dry" is a separate head mode (`hvac_mode: dry`) that the blueprint never selects.
+  Use "clean" in text and identifiers (`off_after_clean`, `coil_clean_minutes`).
+  Upstream's `off_after_dry` is the same behavior, so expect that name when diffing.
 - `source_url` and the README's import badge point at the blueprint on GitHub
   (`mikepell007/mxz_coordinator_blueprint`, branch `main`). Re-import pulls from
   there, so what's on `main` is what users get; rename or move the file and both
