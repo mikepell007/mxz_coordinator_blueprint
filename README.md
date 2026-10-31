@@ -48,6 +48,69 @@ the offset; `0` sends the bare target.
 
    Or under **Settings → Automations & scenes → Blueprints → Import
    blueprint**, paste `https://github.com/mikepell007/mxz_coordinator_blueprint/blob/main/blueprints/automation/mxz_coordinator.yaml`.
+
+## UI Components
+
+This repository includes sample UI components for easier interaction:
+
+1. **Configuration Card** (`ui/configuration-card.yaml`): A climate template that 
+   integrates with the coordinator, handling both single and dual setpoint modes
+2. **Mushroom Climate Card** (`ui/mushroom-climate-card.yaml`): A Mushroom 
+   custom card for visualizing and controlling the virtual climate entity
+
+### Installation of UI Components
+
+1. Place `configuration-card.yaml` in your `config/packages` directory or create it via the UI
+2. Place `mushroom-climate-card.yaml` in your `config/ui` directory or create it via the UI
+3. The mushroom card requires the [Mushroom](https://github.com/piitaya/lovelace-mushroom) 
+   custom integration to be installed in Home Assistant
+
+## Dynamic Temperature Controls Enhancement
+
+The MXZ Coordinator supports both single setpoint and dual setpoint rooms. For a more dynamic UI experience, you can implement dynamic temperature controls that adapt based on the room's configuration:
+
+### Implementation Approach
+
+To create dynamic temperature controls:
+1. Create separate climate entities for each room type (single vs dual setpoint)
+2. Use conditional templates in your UI to detect which controls should be shown
+3. Implement logic that checks if `input_number.room_heat_to` and `input_number.room_cool_to` are configured
+
+### Sample Dynamic Card Implementation
+
+```yaml
+# Example of a dynamic card that can show either single or dual setpoint controls
+type: custom:mushroom-climate-card
+entity: climate.virtual_office_climate
+show_temperature_control: true
+collapsible_controls: true
+tap_action:
+  action: call-service
+  service: input_boolean.toggle
+  target:
+    entity_id: input_boolean.mxz_home_office_enable
+```
+
+### UI Detection Logic
+
+The blueprint's configuration determines whether a room uses single or dual setpoint:
+- **Single Setpoint**: Room has `input_number.room_target` configured (and heat_to and cool_to are empty)
+- **Dual Setpoint**: Room has both `input_number.room_heat_to` and `input_number.room_cool_to` configured
+
+This detection is handled at the blueprint level, but UI cards can be designed to adapt their display accordingly.
+
+## Dependencies
+
+- Home Assistant 2024.10.0 or later
+- Climate entities for each room's indoor unit
+- Input helpers as defined in [mxz_helpers.yaml](mxz_helpers.yaml)
+- Optional: Mushroom custom card integration for enhanced UI experience
+
+## Enhancement: Dynamic Temperature Controls
+
+This repository supports both single setpoint and dual setpoint rooms. The implementation of dynamic temperature controls in UI cards is left to the user's preference, but we provide documentation on how to implement this feature.
+
+For more information about implementing dynamic temperature controls that adapt based on room configuration, see [DYNAMIC_CONTROLS.md](DYNAMIC_CONTROLS.md).
    Or copy [the file](blueprints/automation/mxz_coordinator.yaml) to
    `<config>/blueprints/automation/mxz/` and reload automations. Imported
    copies can pick up later versions with the blueprint's **Re-import
@@ -170,6 +233,31 @@ a major version change says what to re-save.
 pip install -r requirements_test.txt
 pytest                                # runs the blueprint in a real HA test instance
 ```
+
+## UI Components
+
+This repository includes sample UI components for easier interaction:
+
+1. **Configuration Card** (`ui/configuration-card.yaml`): A climate template that 
+   integrates with the coordinator, handling both single and dual setpoint modes
+2. **Mushroom Climate Card** (`ui/mushroom-climate-card.yaml`): A Mushroom 
+   custom card for visualizing and controlling the virtual climate entity
+3. **Dynamic Temperature Card** (`ui/dynamic-temperature-card.yaml`): An example 
+   of how to implement dynamic temperature controls that adapt based on room configuration
+
+### Installation of UI Components
+
+1. Place `configuration-card.yaml` in your `config/packages` directory or create it via the UI
+2. Place `mushroom-climate-card.yaml` in your `config/ui` directory or create it via the UI
+3. Place `dynamic-temperature-card.yaml` in your `config/ui` directory for dynamic controls
+4. The mushroom card requires the [Mushroom](https://github.com/piitaya/lovelace-mushroom) 
+   custom integration to be installed in Home Assistant
+
+## Dynamic Temperature Controls Enhancement
+
+This repository supports both single setpoint and dual setpoint rooms. The implementation of dynamic temperature controls in UI cards is left to the user's preference, but we provide documentation on how to implement this feature.
+
+For more information about implementing dynamic temperature controls that adapt based on room configuration, see [DYNAMIC_CONTROLS.md](DYNAMIC_CONTROLS.md).
 
 ## Credits and license
 

@@ -1,0 +1,9 @@
+type: custom:mushroom-climate-card
+entity: climate.virtual_office_climate
+show_temperature_control: true
+collapsible_controls: true
+tap_action:
+  action: call-service
+  service: input_boolean.toggle
+  target:
+    entity_id: input_boolean.mxz_home_office_enable

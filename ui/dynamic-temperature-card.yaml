@@ -1,0 +1,51 @@
+---
+# Dynamic Temperature Control Card for MXZ Coordinator
+# This card demonstrates how to show either single or dual setpoint controls dynamically
+
+# Single setpoint room example
+type: custom:mushroom-climate-card
+entity: climate.virtual_office_climate
+show_temperature_control: true
+collapsible_controls: true
+temperature_controls:
+  # Single setpoint control
+  - type: temperature
+    entity: input_number.mxz_home_office_target
+    name: Target Temperature
+    visible: >
+      {{ 
+        (states('input_number.mxz_home_office_target') != '' and 
+         states('input_number.mxz_home_office_target') != 'unknown' and
+         states('input_number.mxz_home_office_target') != 'unavailable') and
+        ((states('input_number.mxz_home_office_heat_to') == '' or states('input_number.mxz_home_office_heat_to') is not defined) and
+         (states('input_number.mxz_home_office_cool_to') == '' or states('input_number.mxz_home_office_cool_to') is not defined))
+      }}
+  
+  # Dual setpoint controls
+  - type: temperature
+    entity: input_number.mxz_home_office_heat_to
+    name: Heat To
+    visible: >
+      {{ 
+        (states('input_number.mxz_home_office_heat_to') != '' and 
+         states('input_number.mxz_home_office_heat_to') != 'unknown' and
+         states('input_number.mxz_home_office_heat_to') != 'unavailable')
+      }}
+    
+  - type: temperature
+    entity: input_number.mxz_home_office_cool_to
+    name: Cool To  
+    visible: >
+      {{ 
+        (states('input_number.mxz_home_office_cool_to') != '' and 
+         states('input_number.mxz_home_office_cool_to') != 'unknown' and
+         states('input_number.mxz_home_office_cool_to') != 'unavailable')
+      }}
+
+tap_action:
+  action: call-service
+  service: input_boolean.toggle
+  target:
+    entity_id: input_boolean.mxz_home_office_enable
+
+# This card can be duplicated for each room, replacing the entity and input names appropriately
