@@ -238,7 +238,7 @@ pytest                                # runs the blueprint in a real HA test ins
 
 This repository includes sample UI components for easier interaction:
 
-1. **Configuration Card** (`ui/configuration-card.yaml`): A climate template that 
+1. **Configuration Card** (`ui/configuration_card.yaml`): A climate template that 
    integrates with the coordinator, handling both single and dual setpoint modes
 2. **Mushroom Climate Card** (`ui/mushroom-climate-card.yaml`): A Mushroom 
    custom card for visualizing and controlling the virtual climate entity
@@ -247,7 +247,7 @@ This repository includes sample UI components for easier interaction:
 
 ### Installation of UI Components
 
-1. Place `configuration-card.yaml` in your `config/packages` directory or create it via the UI
+1. Place `configuration_card.yaml` in your `config/packages` directory or create it via the UI
 2. Place `mushroom-climate-card.yaml` in your `config/ui` directory or create it via the UI
 3. Place `dynamic-temperature-card.yaml` in your `config/ui` directory for dynamic controls
 4. The mushroom card requires the [Mushroom](https://github.com/piitaya/lovelace-mushroom) 
