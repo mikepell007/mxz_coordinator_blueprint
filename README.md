@@ -207,7 +207,11 @@ the temperature control and off/auto:
 - Off and auto only turn the room's enable `input_boolean` off and on. Auto doesn't
   put the head in its own auto mode; the coordinator still picks heat or cool. After
   off, the head does what **A disabled room's head** says.
-- The temperature control sets the room's target, or its Heat to and Cool to.
+- The temperature control sets the room's target, or its Heat to and Cool to. In a
+  dual-setpoint room, moving one side pushes the other to keep the least gap, up to
+  the limits of the range. Home Assistant refuses a Heat to above Cool to outright, so
+  move them in steps. The block's optional `min_gap` input sets the gap (2 by default);
+  keep it at or above **Least gap between heat to and cool to** in the automation.
 - The card's mode stays Auto while the room is enabled. A badge on its icon shows
   heating, cooling, or drying, and idle for anything else, including a coil clean.
 - The range is fixed at 64–86 °F in the blueprint.

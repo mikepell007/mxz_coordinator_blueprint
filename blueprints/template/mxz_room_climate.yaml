@@ -44,6 +44,15 @@ blueprint:
       selector:
         entity:
           domain: input_number
+    min_gap:
+      name: Least gap between heat to and cool to
+      description: >-
+        Dual-setpoint rooms only. Changing one side moves the other if it would
+        come closer than this. Keep it at or above the same setting in the
+        automation, which makes a room with a narrower pair ask for nothing.
+      default: 2.0
+      selector:
+        number: {min: 0.5, max: 10, step: 0.5, unit_of_measurement: "°"}
 
 variables:
   head: !input head
@@ -52,6 +61,7 @@ variables:
   target: !input target
   heat_to: !input heat_to
   cool_to: !input cool_to
+  min_gap: !input min_gap
 
 climate:
   hvac_modes: "{{ ['off', 'auto'] }}"
@@ -85,13 +95,32 @@ climate:
           data:
             value: "{{ temperature }}"
       else:
-        - action: input_number.set_value
-          target:
-            entity_id: "{{ heat_to }}"
-          data:
-            value: "{{ target_temp_low }}"
-        - action: input_number.set_value
-          target:
-            entity_id: "{{ cool_to }}"
-          data:
-            value: "{{ target_temp_high }}"
+        # The side that moved wins and pushes the other, and the limits hold it
+        # back if the other side has no room left.
+        - variables:
+            low_now: "{{ states(heat_to) | float(0) }}"
+            high_now: "{{ states(cool_to) | float(0) }}"
+            want_low: "{{ target_temp_low | float(low_now) }}"
+            want_high: "{{ target_temp_high | float(high_now) }}"
+            range_min: "{{ this.attributes.min_temp }}"
+            range_max: "{{ this.attributes.max_temp }}"
+            high_max: "{{ [range_max, state_attr(cool_to, 'max') | float(range_max)] | min }}"
+            low_min: "{{ [range_min, state_attr(heat_to, 'min') | float(range_min)] | max }}"
+            low_max: "{{ [high_max - min_gap, state_attr(heat_to, 'max') | float(range_max)] | min }}"
+            high_min: "{{ [low_min + min_gap, state_attr(cool_to, 'min') | float(range_min)] | max }}"
+            high_moved: "{{ (want_high - high_now) | abs > 0.001 and (want_low - low_now) | abs <= 0.001 }}"
+            new_high: >-
+              {{ [[want_high, high_min] | max, high_max] | min if high_moved
+                 else [[want_high, [[want_low, low_min] | max, low_max] | min + min_gap] | max, high_max] | min }}
+            new_low: "{{ [[want_low, new_high - min_gap] | min, low_min] | max }}"
+        # Widen before narrowing, so the automation never sees a pair that's too close.
+        - repeat:
+            for_each: >-
+              {{ [[cool_to, new_high], [heat_to, new_low]] if new_high > high_now
+                 else [[heat_to, new_low], [cool_to, new_high]] }}
+            sequence:
+              - action: input_number.set_value
+                target:
+                  entity_id: "{{ repeat.item[0] }}"
+                data:
+                  value: "{{ repeat.item[1] }}"
