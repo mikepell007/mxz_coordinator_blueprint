@@ -1,0 +1,97 @@
+blueprint:
+  name: MXZ room thermostat
+  description: >-
+    A thermostat entity for one room of the MXZ Coordinator, for dashboard cards.
+    Its off and auto modes turn the room's enable off and on, and its temperature
+    sets the room's target. The coordinator still commands the head. Pick the same
+    entities as the room's slot in the automation: a Target, or Heat to and Cool to.
+  domain: template
+  source_url: https://github.com/mikepell007/mxz_coordinator_blueprint/blob/main/blueprints/template/mxz_room_climate.yaml
+  input:
+    head:
+      name: Head
+      selector:
+        entity:
+          domain: climate
+    sensor:
+      name: Temperature sensor
+      selector:
+        entity:
+          domain: sensor
+    enable:
+      name: Enable
+      selector:
+        entity:
+          domain: input_boolean
+    target:
+      name: Target
+      description: Leave blank for a dual-setpoint room.
+      default: ""
+      selector:
+        entity:
+          domain: input_number
+    heat_to:
+      name: Heat to
+      description: Dual-setpoint rooms only.
+      default: ""
+      selector:
+        entity:
+          domain: input_number
+    cool_to:
+      name: Cool to
+      description: Dual-setpoint rooms only.
+      default: ""
+      selector:
+        entity:
+          domain: input_number
+
+variables:
+  head: !input head
+  sensor: !input sensor
+  enable: !input enable
+  target: !input target
+  heat_to: !input heat_to
+  cool_to: !input cool_to
+
+climate:
+  hvac_modes: "{{ ['off', 'auto'] }}"
+  min_temperature: 64
+  max_temperature: 86
+
+  # READ STATE: the mode is the room's enable; the action shows what the head is doing
+  hvac_mode: "{{ 'auto' if is_state(enable, 'on') else 'off' }}"
+  hvac_action: >
+    {% if is_state(enable, 'on') %}
+      {{ {'heat': 'heating', 'cool': 'cooling', 'dry': 'drying'}.get(states(head), 'idle') }}
+    {% else %}
+      off
+    {% endif %}
+  current_temperature: "{{ states(sensor) | float(none) }}"
+  target_temperature: "{{ states(target) | float(none) if target else none }}"
+  target_temperature_low: "{{ states(heat_to) | float(none) if heat_to else none }}"
+  target_temperature_high: "{{ states(cool_to) | float(none) if cool_to else none }}"
+
+  # WRITE STATE: only the helpers; the coordinator commands the head
+  set_hvac_mode:
+    - action: "input_boolean.turn_{{ 'off' if hvac_mode == 'off' else 'on' }}"
+      target:
+        entity_id: "{{ enable }}"
+  set_temperature:
+    - if: "{{ target != '' }}"
+      then:
+        - action: input_number.set_value
+          target:
+            entity_id: "{{ target }}"
+          data:
+            value: "{{ temperature }}"
+      else:
+        - action: input_number.set_value
+          target:
+            entity_id: "{{ heat_to }}"
+          data:
+            value: "{{ target_temp_low }}"
+        - action: input_number.set_value
+          target:
+            entity_id: "{{ cool_to }}"
+          data:
+            value: "{{ target_temp_high }}"

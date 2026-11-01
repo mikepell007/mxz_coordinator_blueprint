@@ -13,7 +13,10 @@ when copying anything else from upstream.
 | --- | --- |
 | `blueprints/automation/mxz_coordinator.yaml` | The blueprint: six room slots, all logic in one Jinja `plan` variable; the actions apply `plan.commands`. |
 | `tests/test_blueprint.py` | Runs the blueprint in a real HA test instance (`pytest-homeassistant-custom-component`) with mock heads that apply commands to their own state. |
+| `tests/test_room_climate.py` | Runs the room thermostat blueprint and the `ui/configuration_card.yaml` sample in the same kind of test instance. |
 | `mxz_helpers.yaml` | Example HA helpers: per-room targets and enables, `input_boolean.mxz_enable`, and `input_select.mxz_mode`. |
+| `blueprints/template/mxz_room_climate.yaml` | Optional: a template blueprint that makes one thermostat entity per room for dashboard cards. |
+| `ui/` | Samples for it: `configuration_card.yaml` (one room's `use_blueprint` block) and `mushroom-climate-card.yaml`. |
 | `README.md` | User-facing setup and caveats. |
 | `CHANGELOG.md` | One entry per version, with the rules for choosing the number and upgrade steps for major versions. |
 | `LICENSE`, `NOTICE` | MIT for this repo; upstream's MIT notice and what was ported, at which commit. |
@@ -132,10 +135,38 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
 - `source_url` and the README's import badge point at the blueprint on GitHub
   (`mikepell007/mxz_coordinator_blueprint`, branch `main`). Re-import pulls from
   there, so what's on `main` is what users get; rename or move the file and both
-  need updating (the badge's `blueprint_url` is URL-encoded).
+  need updating (the badge's `blueprint_url` is URL-encoded). The room thermostat
+  blueprint has its own of each, and `tests/test_room_climate.py` runs both badges
+  through HA's importer. That can't reach GitHub, so a new file's link only works once
+  it's on `main`.
+
+## Room thermostat and UI samples
+
+- **The thermostat's mode is the room's enable boolean.** `off`/`auto` read from
+  and write to the boolean only, and `hvac_action` reports what the head is doing.
+  Never pass `auto` to the head: it's not a valid mode on these heads, and the
+  coordinator owns the head's mode.
+- **It's a core template `climate` entity, made by a template blueprint**, so there's
+  no custom integration and each room is one short block. `target` or `heat_to` and
+  `cool_to` choose single or dual; Mushroom shows one control when `temperature` has
+  a value and two otherwise. Fan mode is left out: the platform requires a mode, a
+  list, and a set action together, and the card doesn't use it.
+- **Mushroom's bottom-bar switch is built in.** It appears when
+  `show_temperature_control` and `hvac_modes` are both set. Keep `collapsible_controls`
+  out: it hides the bar while the entity is off, so the room can't be turned back on.
+- **The Template entities reload picks up blueprint and block edits.**
+- **One version covers the repo.** It stays in the coordinator's `name`, and changes
+  here get `CHANGELOG.md` entries like any other. They can't affect a saved automation,
+  so new features here are minor; say what to do by hand for anyone using the samples.
+- **Importing needs the template integration loaded.** HA's importer answers
+  `Unsupported domain` until something in the config uses `template:`, so the README
+  also gives the manual copy. Import saves to `template/mikepell007/`, which is the
+  `path` in `ui/configuration_card.yaml`; keep them matching.
 
 ## Testing limits
 
 `tests/test_blueprint.py` runs the real automation and template engines, but with mock
 heads that report instantly. It doesn't cover cloud timing or real Mitsubishi heads.
-Say so when reporting a change as done.
+Say so when reporting a change as done. `tests/test_room_climate.py` runs the thermostat
+blueprint and its sample but can't render the Mushroom card, so check that on a real
+dashboard.
