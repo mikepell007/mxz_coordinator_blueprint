@@ -15,6 +15,7 @@ import pytest
 import yaml
 from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 ROOT = Path(__file__).parent.parent
@@ -30,6 +31,9 @@ DEN_HEAD = "climate.den"
 DEN_ENABLE = "input_boolean.den_enable"
 DEN_HEAT_TO = "input_number.den_heat_to"
 DEN_COOL_TO = "input_number.den_cool_to"
+LOFT = "climate.loft_thermostat"
+LOFT_HEAT_TO = "input_number.loft_heat_to"
+LOFT_COOL_TO = "input_number.loft_cool_to"
 
 
 @pytest.fixture
@@ -48,6 +52,8 @@ async def climate_calls(hass: HomeAssistant) -> list[Event]:
         "mxz_home_office_target": {**number, "initial": 70},
         "den_heat_to": {**number, "initial": 68},
         "den_cool_to": {**number, "initial": 74},
+        "loft_heat_to": {**number, "initial": 68},
+        "loft_cool_to": {**number, "initial": 74},
     }})
     hass.states.async_set(OFFICE_HEAD, "cool")
     hass.states.async_set(DEN_HEAD, "off")
@@ -68,8 +74,16 @@ async def climate_calls(hass: HomeAssistant) -> list[Event]:
         "name": "Den Thermostat",
         "unique_id": "den_thermostat",
     }
+    loft = {
+        "use_blueprint": {"path": "mikepell007/mxz_room_climate.yaml", "input": {
+            "head": DEN_HEAD, "sensor": "sensor.den_temperature", "enable": DEN_ENABLE,
+            "heat_to": LOFT_HEAT_TO, "cool_to": LOFT_COOL_TO, "min_gap": 4,
+        }},
+        "name": "Loft Thermostat",
+        "unique_id": "loft_thermostat",
+    }
     sample = yaml.safe_load(SAMPLE.read_text())["template"]
-    assert await async_setup_component(hass, "template", {"template": [*sample, den]})
+    assert await async_setup_component(hass, "template", {"template": [*sample, den, loft]})
     await hass.async_block_till_done()
     return calls
 
@@ -130,6 +144,75 @@ async def test_temperature_sets_the_rooms_helpers(hass: HomeAssistant, climate_c
     await call(hass, "set_temperature", entity_id=DEN, target_temp_low=66, target_temp_high=78)
     assert float(hass.states.get(DEN_HEAT_TO).state) == 66
     assert float(hass.states.get(DEN_COOL_TO).state) == 78
+
+
+def pair(hass: HomeAssistant, heat_to: str = DEN_HEAT_TO, cool_to: str = DEN_COOL_TO) -> tuple:
+    return float(hass.states.get(heat_to).state), float(hass.states.get(cool_to).state)
+
+
+async def card_sets(hass: HomeAssistant, entity: str, side: str, value: float) -> None:
+    """Change one side the way the Mushroom card does: it also sends the other's value."""
+    attrs = hass.states.get(entity).attributes
+    await call(hass, "set_temperature", entity_id=entity, **{
+        "target_temp_low": attrs["target_temp_low"],
+        "target_temp_high": attrs["target_temp_high"],
+        side: value,
+    })
+
+
+@pytest.mark.parametrize(
+    ("start", "side", "value", "expected"),
+    [
+        ((68, 74), "target_temp_low", 66, (66, 74)),    # room to spare: the other side stays
+        ((68, 74), "target_temp_high", 78, (68, 78)),
+        ((68, 74), "target_temp_low", 72, (72, 74)),    # exactly the gap: the other side stays
+        ((68, 74), "target_temp_low", 73, (73, 75)),    # too close: Cool to is pushed up
+        ((68, 74), "target_temp_low", 74, (74, 76)),    # level: still pushed
+        ((68, 74), "target_temp_high", 69, (67, 69)),   # too close: Heat to is pushed down
+        ((84, 86), "target_temp_low", 85, (84, 86)),    # no room above: held back by the top
+        ((64, 66), "target_temp_high", 65, (64, 66)),   # no room below: held back by the bottom
+    ],
+)
+async def test_card_keeps_the_gap(
+    hass: HomeAssistant, climate_calls, start, side, value, expected
+) -> None:
+    await call(hass, "set_temperature", entity_id=DEN, target_temp_low=start[0], target_temp_high=start[1])
+    assert pair(hass) == start
+    await card_sets(hass, DEN, side, value)
+    assert pair(hass) == expected
+    state = hass.states.get(DEN)
+    assert (state.attributes["target_temp_low"], state.attributes["target_temp_high"]) == expected
+
+
+async def test_home_assistant_refuses_heat_to_above_cool_to(hass: HomeAssistant, climate_calls) -> None:
+    with pytest.raises(ServiceValidationError):
+        await card_sets(hass, DEN, "target_temp_low", 80)
+    assert pair(hass) == (68, 74)
+
+
+async def test_gap_is_configurable(hass: HomeAssistant, climate_calls) -> None:
+    await card_sets(hass, LOFT, "target_temp_low", 72)
+    assert pair(hass, LOFT_HEAT_TO, LOFT_COOL_TO) == (72, 76)
+
+
+@pytest.mark.parametrize(
+    ("start", "end"),
+    [((68, 74), (76, 80)), ((76, 80), (66, 70)), ((68, 74), (70, 72)), ((68, 74), (64, 80))],
+)
+async def test_pair_is_never_too_close_while_writing(
+    hass: HomeAssistant, climate_calls, start, end
+) -> None:
+    """The automation reacts to each write, so it mustn't see a narrow pair between them."""
+    await call(hass, "set_temperature", entity_id=DEN, target_temp_low=start[0], target_temp_high=start[1])
+    seen: list[tuple] = []
+    hass.bus.async_listen(
+        "state_changed",
+        lambda e: seen.append(pair(hass)) if e.data["entity_id"] in (DEN_HEAT_TO, DEN_COOL_TO) else None,
+    )
+    await call(hass, "set_temperature", entity_id=DEN, target_temp_low=end[0], target_temp_high=end[1])
+    assert pair(hass) == end
+    assert seen
+    assert all(cool - heat >= 2 for heat, cool in seen)
 
 
 def readme_import_urls() -> dict[str, str]:

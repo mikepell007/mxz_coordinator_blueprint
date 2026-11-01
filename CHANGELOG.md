@@ -8,6 +8,21 @@ the blueprint:
 - **Minor:** a new feature that changes nothing until it's turned on.
 - **Patch:** a bug fix or wording change.
 
+## 1.2.0 (2026-11-01)
+
+Saved coordinator automations need nothing: re-importing the blueprint changes only
+its version number.
+
+- The room thermostat now keeps Heat to and Cool to apart. Changing one side moves the
+  other if the two would come closer than the new **Least gap between heat to and cool
+  to** input (2 by default), so a card can no longer leave a room asking for nothing.
+  Set it at or above the same setting in the automation.
+- The thermostat now writes the pair in a safe order, so the automation can't park a
+  running head because it read the pair between two writes.
+
+To pick this up, replace your copy of `mxz_room_climate.yaml` and reload **Template
+entities**.
+
 ## 1.1.0 (2026-11-01)
 
 Saved coordinator automations need nothing: re-importing the blueprint changes only

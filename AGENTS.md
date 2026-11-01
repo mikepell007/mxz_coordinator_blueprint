@@ -70,7 +70,9 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
 - Up to 6 rooms (upstream allows 8).
 - **Dual setpoint is two helpers, not a climate range.** Upstream refuses or
   pushes a too-narrow write (`resolve_range`); helpers can't be constrained, so a
-  pair under `dual_min_gap` makes the room ask for nothing (`problem` says why).
+  pair under `dual_min_gap` makes the room ask for nothing (`problem` says why). The
+  room thermostat pushes on writes from a card, but a helper edited directly still
+  gets this fallback.
   No midpoint target, `shift_range`, or switching a room between single and dual
   at runtime; which kind a room is comes from which inputs are filled.
 - **Doors and windows are ours, not upstream's.** A room's optional `open`
@@ -151,6 +153,11 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
   `cool_to` choose single or dual; Mushroom shows one control when `temperature` has
   a value and two otherwise. Fan mode is left out: the platform requires a mode, a
   list, and a set action together, and the card doesn't use it.
+- **The thermostat keeps a dual pair apart.** Core's climate service refuses low above
+  high before the action runs, so only too-close pairs reach it. The moved side wins and
+  pushes the other by `min_gap`, within the range and each helper's limits, and the
+  wider side is written first because the automation triggers on each write. `min_gap`
+  is its own input: a template blueprint can't read the automation's `dual_min_gap`.
 - **Mushroom's bottom-bar switch is built in.** It appears when
   `show_temperature_control` and `hvac_modes` are both set. Keep `collapsible_controls`
   out: it hides the bar while the entity is off, so the room can't be turned back on.
