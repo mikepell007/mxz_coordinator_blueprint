@@ -529,6 +529,82 @@ async def test_open_sensor_alone_is_a_partly_filled_room(hass: HomeAssistant, fr
     assert "Room 3: each room needs a head, sensor" in notes[-1]["message"]
 
 
+OCCUPIED = "binary_sensor.bedroom_occupancy"
+
+
+async def test_inverted_sensor_stops_an_empty_room(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OCCUPIED, "on")
+    await rig.setup(room_2_open=OCCUPIED, room_2_open_invert=True, open_delay_seconds=60)
+    await rig.set(SENSORS[1], 66)
+    await rig.run()
+    assert rig.head(1).state == "heat"
+
+    # Emptied: nothing until the open delay passes, then off (it was heating: no clean).
+    await rig.set(OCCUPIED, "off")
+    await rig.run(after=30)
+    assert rig.head(1).state == "heat"
+    await rig.run(after=31)
+    assert rig.head(1).state == "off"
+
+    # Occupied again: the head stays off until the close delay (120 s default) passes.
+    await rig.set(OCCUPIED, "on")
+    await rig.run(after=1)
+    assert rig.head(1).state == "off"
+    await rig.run(after=120)
+    assert rig.head(1).state == "heat"
+
+
+async def test_empty_cooling_room_cleans_its_coil(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OCCUPIED, "on")
+    await rig.setup(room_1_open=OCCUPIED, room_1_open_invert=True, open_delay_seconds=0)
+    await rig.set(SENSORS[0], 74)
+    await rig.run()
+    assert rig.head(0).state == "cool"
+    await rig.set(OCCUPIED, "off")
+    await rig.run()
+    assert rig.head(0).state == "fan_only"
+    await rig.run(after=300)
+    assert rig.head(0).state == "fan_only"
+    await rig.run(after=301)  # past the 10-minute coil clean
+    assert rig.head(0).state == "off"
+
+
+async def test_empty_room_with_idle_off_skips_the_clean(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OCCUPIED, "on")
+    await rig.setup(room_1_open=OCCUPIED, room_1_open_invert=True, open_delay_seconds=0,
+                    idle_action="off")
+    await rig.set(SENSORS[0], 74)
+    await rig.run()
+    assert rig.head(0).state == "cool"
+    await rig.set(OCCUPIED, "off")
+    await rig.run()
+    assert rig.head(0).state == "off"
+
+
+async def test_empty_room_makes_no_demand(hass: HomeAssistant, freezer) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OCCUPIED, "off")
+    await rig.setup(room_2_open=OCCUPIED, room_2_open_invert=True, open_delay_seconds=0)
+    await rig.set(SENSORS[1], 60)
+    await rig.run()
+    assert rig.mode() == "cool"
+    assert rig.head(1).state == "off"
+
+
+@pytest.mark.parametrize("invert", [False, True])
+async def test_unavailable_open_sensor_stops_nothing(hass: HomeAssistant, freezer, invert) -> None:
+    rig = Rig(hass, freezer)
+    await rig.set(OCCUPIED, "unavailable")
+    await rig.setup(room_2_open=OCCUPIED, room_2_open_invert=invert,
+                    open_delay_seconds=0, close_delay_seconds=0)
+    await rig.set(SENSORS[1], 66)
+    await rig.run()
+    assert rig.head(1).state == "heat"
+
+
 DRY = {"room_2_allow_dry": True}
 
 

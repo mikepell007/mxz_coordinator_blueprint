@@ -8,6 +8,20 @@ the blueprint:
 - **Minor:** a new feature that changes nothing until it's turned on.
 - **Patch:** a bug fix or wording change.
 
+## 1.3.0 (2026-11-03)
+
+Saved automations need nothing: re-importing the blueprint adds an option that is
+off until you turn it on.
+
+- Each room has a new **invert doors and windows** option, for an occupancy sensor
+  or group in place of doors and windows. With it on, the room stops while the
+  sensor is off, once it has been off for **Door or window open delay**, and a
+  stopped head starts again once the sensor has been on for **Door or window close
+  delay**. Those delays are shared with the rooms that use doors and windows.
+- An empty room's head cleans its coil first if it was cooling, unless **When a
+  room is done or waiting** is Off. An open window still turns a head straight off.
+- A sensor that is unavailable or unknown still stops nothing, inverted or not.
+
 ## 1.2.0 (2026-11-01)
 
 Saved coordinator automations need nothing: re-importing the blueprint changes only
