@@ -81,7 +81,11 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
   `act` chain picks `off`, with no coil clean. `held` is a stopped head (not in
   heat/cool) whose sensor is on but not yet `open`, or off for under
   `close_delay_seconds`: it gets no demand or engage and `act` `hold` (no
-  command), so it can't start; a running head is never held. With no memory, the
+  command), so it can't start; a running head is never held. `open_invert`
+  (occupancy) swaps the states: off is `stop_state`, on is `go_state`, and
+  anything else is neither. An inverted `open` still gets the coil clean
+  (`clean_due`) unless `idle_action` is `off`, since there's no window to blow
+  out of. With no memory, the
   blueprint can't tell whether a closed door's last opening was long enough to
   count, so the close delay applies after any opening, but only to stopped heads.
   Ordered after "disabled", so a disabled room's `leave` still wins. Not in
@@ -109,9 +113,9 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
 - **Variables come back as Python literals, not JSON.** End `plan` with a bare
   dict (`{{ {...} }}`). `| tojson` makes `true`/`null`, which fails literal parsing,
   and `plan` silently becomes a string.
-- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable/open/allow_dry`;
+- **Rooms are six fixed slots** (`room_N_head/sensor/target/heat_to/cool_to/enable/open/open_invert/allow_dry`;
   head, sensor, and enable required in 1–2, everything else default `""`, and
-  `allow_dry` default false). A room
+  `open_invert` and `allow_dry` default false). A room
   has a target or a Heat to/Cool to pair, never both; `dual` in the plan is "no
   target". `slots` gathers them, `rooms_cfg` keeps slots with a head, and
   `config_ok` rejects partly filled slots (`incomplete`) and entities used twice

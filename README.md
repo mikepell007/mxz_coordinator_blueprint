@@ -24,7 +24,7 @@ that controls the same heads.
 | Weather lockouts with safety floor/ceiling | Yes, from an outdoor sensor or weather entity |
 | Up to 8 heads | Up to 6 rooms |
 | Dual setpoint (Heat to / Cool to) | Yes, per room, from two `input_number` helpers |
-| Doors and windows | New here: an open room's head turns off and the room asks for nothing |
+| Doors and windows, or occupancy | New here: an open or empty room's head turns off and the room asks for nothing |
 | Eco/away, standby hold, safety priority, freeze floor, own-remote rooms, lost-vote TTL, per-room thermostats | No |
 
 ## The local-sensor difference
@@ -98,6 +98,15 @@ soon as everything is shut.
 
 Both delays are checked on the 2-minute timer, so the head goes off, or back
 on, up to 2 minutes after a delay ends.
+
+**Occupancy instead.** Turn on a room's **invert doors and windows** and its
+sensor works the other way round: pick an occupancy sensor, or a group of them,
+and the room stops while it's off. The same delays apply, so the open delay is how
+long the room must be empty before its head stops, and the close delay is how long
+it must be occupied before a stopped head starts. They're shared with any rooms
+using doors and windows. An empty room's head cleans its coil first if it was
+cooling, unless **When a room is done or waiting** is Off. A sensor that is
+unavailable stops nothing.
 
 **Dry mode.** The heads' own Dry (dehumidify) mode is something you pick; the
 blueprint never selects it. With a room's **allow Dry mode** off (the default), a
