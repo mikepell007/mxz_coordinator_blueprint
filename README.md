@@ -11,6 +11,10 @@ for the optional [sample cards](#ui-components-optional).
 Don't run it alongside the MXZ Coordinator integration, or any other automation
 that controls the same heads.
 
+Questions and feedback are welcome in the
+[Blueprints Exchange thread](https://community.home-assistant.io/t/mitsubishi-mxz-multi-zone-mini-split-coordinator-blueprint/1032018)
+on the Home Assistant forum.
+
 ## What it keeps
 
 | Integration feature | Here |
