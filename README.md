@@ -228,6 +228,14 @@ the temperature control and off/auto:
 - The card's mode stays Auto while the room is enabled. A badge on its icon shows
   heating, cooling, or drying, and idle for anything else, including a coil clean.
 - The range is fixed at 64–86 °F in the blueprint.
+- **Head online.** To see when a head drops off the network, add the **Ping (ICMP)**
+  integration under **Settings → Devices & services → Add integration** with the
+  head's Wi-Fi adapter address. Give the adapter a fixed address (a DHCP reservation
+  in your router) so the sensor keeps pinging the right device. Then add the sensor's
+  `binary_sensor` to the room's block as `online`. While it's off, the card's icon is
+  a Wi-Fi-off symbol; leave `icon` out of the card, or it replaces this. The
+  thermostat's `head_online` attribute says the same for other cards. The coordinator
+  doesn't use it.
 
 The thermostat blueprint was tested on Home Assistant 2026.10.4. Earlier versions
 may not have template climate entities.

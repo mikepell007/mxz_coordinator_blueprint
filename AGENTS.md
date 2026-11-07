@@ -162,6 +162,11 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
   pushes the other by `min_gap`, within the range and each helper's limits, and the
   wider side is written first because the automation triggers on each write. `min_gap`
   is its own input: a template blueprint can't read the automation's `dual_min_gap`.
+- **The online indicator is the entity's icon.** Mushroom's climate card has no slot
+  for extra status, but it draws the entity's `icon`, so an optional `online`
+  binary_sensor turns it to `mdi:wifi-off` while off; otherwise it's
+  `mdi:thermostat`, HA's climate default, so the icon is always set. `head_online` is
+  true/false, or none without a sensor or while it's unknown. The coordinator ignores it.
 - **Mushroom's bottom-bar switch is built in.** It appears when
   `show_temperature_control` and `hvac_modes` are both set. Keep `collapsible_controls`
   out: it hides the bar while the entity is off, so the room can't be turned back on.
