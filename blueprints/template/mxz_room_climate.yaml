@@ -63,6 +63,25 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
+    open:
+      name: Doors and windows
+      description: >-
+        Optional. The same binary_sensor as the room's doors and windows in the
+        automation. While it's on, the icon is an open window. It follows the
+        sensor straight away; the automation waits its open delay before stopping
+        the head.
+      default: ""
+      selector:
+        entity:
+          domain: binary_sensor
+    open_invert:
+      name: Invert doors and windows
+      description: >-
+        Match the automation's Invert setting for this room: for an occupancy
+        sensor, the icon shows an empty room while it's off.
+      default: false
+      selector:
+        boolean:
 
 variables:
   head: !input head
@@ -73,16 +92,32 @@ variables:
   cool_to: !input cool_to
   min_gap: !input min_gap
   online: !input online
+  open: !input open
+  open_invert: !input open_invert
 
 climate:
   hvac_modes: "{{ ['off', 'auto'] }}"
   min_temperature: 64
   max_temperature: 86
 
-  # The head's reachability, for cards: an icon, and true/false (none without a
-  # sensor, or while it's unknown or unavailable)
-  icon: "{{ 'mdi:wifi-off' if online and is_state(online, 'off') else 'mdi:thermostat' }}"
+  # Status for cards: an icon, and room_status. Offline comes first, since a head
+  # that can't be reached won't act on the rest. Unknown or unavailable sensors
+  # count as neither state, as in the automation. Both templates work it out, so
+  # the icon never lags the attribute.
+  icon: >-
+    {%- if online and is_state(online, 'off') -%}mdi:wifi-off
+    {%- elif open and is_state(open, 'off' if open_invert else 'on') -%}
+      {{- 'mdi:account-off' if open_invert else 'mdi:window-open-variant' -}}
+    {%- else -%}mdi:thermostat
+    {%- endif -%}
   attributes:
+    room_status: >-
+      {%- if online and is_state(online, 'off') -%}offline
+      {%- elif open and is_state(open, 'off' if open_invert else 'on') -%}
+        {{- 'unoccupied' if open_invert else 'open' -}}
+      {%- else -%}ok
+      {%- endif -%}
+    # true/false, or none without a sensor or while it's unknown or unavailable
     head_online: "{{ {'on': true, 'off': false}.get(states(online)) if online else none }}"
 
   # READ STATE: the mode is the room's enable; the action shows what the head is doing

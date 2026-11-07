@@ -236,6 +236,13 @@ the temperature control and off/auto:
   a Wi-Fi-off symbol; leave `icon` out of the card, or it replaces this. The
   thermostat's `head_online` attribute says the same for other cards. The coordinator
   doesn't use it.
+- **Doors, windows, and occupancy.** Add the room's doors and windows sensor to its
+  block as `open`, the same one as its slot in the automation, and `open_invert: true`
+  if that slot has Invert on. While it's on, the icon is an open window; inverted,
+  while it's off, the icon is a person with a slash for an empty room. Offline wins
+  over both. The icon follows the sensor straight away, while the automation waits
+  its open and close delays, so it can show open for a moment while the head still
+  runs. The `room_status` attribute is `offline`, `open`, `unoccupied`, or `ok`.
 
 The thermostat blueprint was tested on Home Assistant 2026.10.4. Earlier versions
 may not have template climate entities.

@@ -8,6 +8,25 @@ the blueprint:
 - **Minor:** a new feature that changes nothing until it's turned on.
 - **Patch:** a bug fix or wording change.
 
+## 1.5.0 (2026-11-07)
+
+Saved coordinator automations need nothing: re-importing the blueprint changes only
+its version number.
+
+- The room thermostat has new optional **Doors and windows** and **Invert doors and
+  windows** inputs. Give them the same sensor and setting as the room's slot in the
+  automation. While a door or window is open, the icon is an open window; with
+  Invert, while the room is empty, it's a person with a slash. A head that's offline
+  still shows Wi-Fi-off first.
+- A new `room_status` attribute says the same for other cards: `offline`, `open`,
+  `unoccupied`, or `ok`.
+- The icon follows the sensor straight away. The automation still waits its open and
+  close delays, so for a moment the icon can show open while the head runs.
+
+To pick this up, replace your copy of `mxz_room_climate.yaml`, add `open` (and
+`open_invert: true` for an occupancy sensor) to each room's block if you want it, and
+reload **Template entities**.
+
 ## 1.4.0 (2026-11-07)
 
 Saved coordinator automations need nothing: re-importing the blueprint changes only

@@ -9,5 +9,7 @@ template:
         enable: input_boolean.mxz_home_office_enable
         target: input_number.mxz_home_office_target
         # online: binary_sensor.office_head_ping   # optional: the head's Ping sensor
+        # open: binary_sensor.office_openings      # optional: same as the room's slot
+        # open_invert: false                       # true for an occupancy sensor
     name: Virtual Office Climate
     unique_id: virtual_office_climate
