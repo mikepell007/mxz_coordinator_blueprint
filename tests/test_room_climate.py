@@ -31,6 +31,7 @@ DEN_HEAD = "climate.den"
 DEN_ENABLE = "input_boolean.den_enable"
 DEN_HEAT_TO = "input_number.den_heat_to"
 DEN_COOL_TO = "input_number.den_cool_to"
+DEN_PING = "binary_sensor.den_head_ping"
 LOFT = "climate.loft_thermostat"
 LOFT_HEAT_TO = "input_number.loft_heat_to"
 LOFT_COOL_TO = "input_number.loft_cool_to"
@@ -59,6 +60,7 @@ async def climate_calls(hass: HomeAssistant) -> list[Event]:
     hass.states.async_set(DEN_HEAD, "off")
     hass.states.async_set("sensor.office_motion_air_temperature_2", "72")
     hass.states.async_set("sensor.den_temperature", "71")
+    hass.states.async_set(DEN_PING, "on")
 
     assert await async_setup_component(hass, "climate", {})
     calls: list[Event] = []
@@ -69,7 +71,7 @@ async def climate_calls(hass: HomeAssistant) -> list[Event]:
     den = {
         "use_blueprint": {"path": "mikepell007/mxz_room_climate.yaml", "input": {
             "head": DEN_HEAD, "sensor": "sensor.den_temperature", "enable": DEN_ENABLE,
-            "heat_to": DEN_HEAT_TO, "cool_to": DEN_COOL_TO,
+            "heat_to": DEN_HEAT_TO, "cool_to": DEN_COOL_TO, "online": DEN_PING,
         }},
         "name": "Den Thermostat",
         "unique_id": "den_thermostat",
@@ -111,6 +113,27 @@ async def test_reports_a_dual_setpoint_room(hass: HomeAssistant, climate_calls) 
     assert state.attributes["temperature"] is None
     assert state.attributes["target_temp_low"] == 68
     assert state.attributes["target_temp_high"] == 74
+
+
+@pytest.mark.parametrize(
+    ("ping", "icon", "online"),
+    [("on", "mdi:thermostat", True), ("off", "mdi:wifi-off", False),
+     ("unavailable", "mdi:thermostat", None)],
+)
+async def test_icon_shows_the_head_offline(
+    hass: HomeAssistant, climate_calls, ping, icon, online
+) -> None:
+    hass.states.async_set(DEN_PING, ping)
+    await hass.async_block_till_done()
+    state = hass.states.get(DEN)
+    assert state.attributes["icon"] == icon
+    assert state.attributes["head_online"] is online
+
+
+async def test_no_online_sensor_keeps_the_usual_icon(hass: HomeAssistant, climate_calls) -> None:
+    state = hass.states.get(OFFICE)
+    assert state.attributes["icon"] == "mdi:thermostat"
+    assert state.attributes["head_online"] is None
 
 
 @pytest.mark.parametrize(

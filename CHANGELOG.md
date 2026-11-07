@@ -8,6 +8,22 @@ the blueprint:
 - **Minor:** a new feature that changes nothing until it's turned on.
 - **Patch:** a bug fix or wording change.
 
+## 1.4.0 (2026-11-07)
+
+Saved coordinator automations need nothing: re-importing the blueprint changes only
+its version number.
+
+- The room thermostat has a new optional **Head online sensor** input, such as a Ping
+  sensor for the head's Wi-Fi adapter. While that sensor is off, the thermostat's
+  icon, and so the card's, is a Wi-Fi-off symbol. A `head_online` attribute (true,
+  false, or none) carries the same thing for other cards.
+- The thermostat's icon is now set by the blueprint: `mdi:thermostat`, the same as
+  before, unless the head is offline.
+
+To pick this up, replace your copy of `mxz_room_climate.yaml`, add `online` to each
+room's block if you want it, and reload **Template entities**. A card that sets its
+own `icon` won't show the change.
+
 ## 1.3.0 (2026-11-03)
 
 Saved automations need nothing: re-importing the blueprint adds an option that is

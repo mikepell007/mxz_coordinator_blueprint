@@ -8,5 +8,6 @@ template:
         sensor: sensor.office_motion_air_temperature_2
         enable: input_boolean.mxz_home_office_enable
         target: input_number.mxz_home_office_target
+        # online: binary_sensor.office_head_ping   # optional: the head's Ping sensor
     name: Virtual Office Climate
     unique_id: virtual_office_climate

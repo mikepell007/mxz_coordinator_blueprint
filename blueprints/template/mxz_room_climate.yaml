@@ -53,6 +53,16 @@ blueprint:
       default: 2.0
       selector:
         number: {min: 0.5, max: 10, step: 0.5, unit_of_measurement: "°"}
+    online:
+      name: Head online sensor
+      description: >-
+        Optional. A binary_sensor that is on while the head can be reached, such as
+        a Ping sensor for its Wi-Fi adapter. While it's off, the thermostat's icon
+        is a Wi-Fi-off symbol. The coordinator doesn't use it.
+      default: ""
+      selector:
+        entity:
+          domain: binary_sensor
 
 variables:
   head: !input head
@@ -62,11 +72,18 @@ variables:
   heat_to: !input heat_to
   cool_to: !input cool_to
   min_gap: !input min_gap
+  online: !input online
 
 climate:
   hvac_modes: "{{ ['off', 'auto'] }}"
   min_temperature: 64
   max_temperature: 86
+
+  # The head's reachability, for cards: an icon, and true/false (none without a
+  # sensor, or while it's unknown or unavailable)
+  icon: "{{ 'mdi:wifi-off' if online and is_state(online, 'off') else 'mdi:thermostat' }}"
+  attributes:
+    head_online: "{{ {'on': true, 'off': false}.get(states(online)) if online else none }}"
 
   # READ STATE: the mode is the room's enable; the action shows what the head is doing
   hvac_mode: "{{ 'auto' if is_state(enable, 'on') else 'off' }}"
