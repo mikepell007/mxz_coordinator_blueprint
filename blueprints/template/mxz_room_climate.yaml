@@ -5,6 +5,8 @@ blueprint:
     Its off and auto modes turn the room's enable off and on, and its temperature
     sets the room's target. The coordinator still commands the head. Pick the same
     entities as the room's slot in the automation: a Target, or Heat to and Cool to.
+    Its icon can show a head that's offline, an open door or window, or an empty
+    room.
   domain: template
   source_url: https://github.com/mikepell007/mxz_coordinator_blueprint/blob/main/blueprints/template/mxz_room_climate.yaml
   input:
