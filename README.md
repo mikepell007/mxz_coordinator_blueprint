@@ -243,6 +243,12 @@ the temperature control and off/auto:
   over both. The icon follows the sensor straight away, while the automation waits
   its open and close delays, so it can show open for a moment while the head still
   runs. The `room_status` attribute is `offline`, `open`, `unoccupied`, or `ok`.
+- **Status in words.** [ui/mushroom-room-stack.yaml](ui/mushroom-room-stack.yaml)
+  puts a row of Mushroom chips above the same card: *Head offline*, *Window open*,
+  or *Room empty*, each shown only while it applies, so the row is empty when all
+  is well. It reads the sensors directly and needs no thermostat inputs. Set its
+  entities to the room's sensors, and keep the open or the empty chip to match the
+  room's Invert setting.
 
 The thermostat blueprint was tested on Home Assistant 2026.10.4. Earlier versions
 may not have template climate entities.

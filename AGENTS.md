@@ -16,7 +16,7 @@ when copying anything else from upstream.
 | `tests/test_room_climate.py` | Runs the room thermostat blueprint and the `ui/configuration_card.yaml` sample in the same kind of test instance. |
 | `mxz_helpers.yaml` | Example HA helpers: per-room targets and enables, `input_boolean.mxz_enable`, and `input_select.mxz_mode`. |
 | `blueprints/template/mxz_room_climate.yaml` | Optional: a template blueprint that makes one thermostat entity per room for dashboard cards. |
-| `ui/` | Samples for it: `configuration_card.yaml` (one room's `use_blueprint` block) and `mushroom-climate-card.yaml`. |
+| `ui/` | Samples for it: `configuration_card.yaml` (one room's `use_blueprint` block), `mushroom-climate-card.yaml`, and `mushroom-room-stack.yaml` (the same card under conditional status chips; a test checks the two cards match). |
 | `README.md` | User-facing setup and caveats. |
 | `CHANGELOG.md` | One entry per version, with the rules for choosing the number and upgrade steps for major versions. |
 | `LICENSE`, `NOTICE` | MIT for this repo; upstream's MIT notice and what was ported, at which commit. |

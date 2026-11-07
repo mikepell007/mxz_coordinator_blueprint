@@ -22,8 +22,12 @@ its version number.
   `unoccupied`, or `ok`.
 - The icon follows the sensor straight away. The automation still waits its open and
   close delays, so for a moment the icon can show open while the head runs.
+- A new sample, `ui/mushroom-room-stack.yaml`, puts a row of Mushroom chips above the
+  climate card: *Head offline*, *Window open*, or *Room empty*, each only while it
+  applies. It reads the sensors directly, so it works without the new inputs.
 
-To pick this up, replace your copy of `mxz_room_climate.yaml`, add `open` (and
+To use the chips, paste the stack sample into a card in place of the plain one and
+set its entities. To pick up the icon, replace your copy of `mxz_room_climate.yaml`, add `open` (and
 `open_invert: true` for an occupancy sensor) to each room's block if you want it, and
 reload **Template entities**.
 

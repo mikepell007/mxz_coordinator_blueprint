@@ -21,6 +21,8 @@ from homeassistant.setup import async_setup_component
 ROOT = Path(__file__).parent.parent
 BLUEPRINT = ROOT / "blueprints" / "template" / "mxz_room_climate.yaml"
 SAMPLE = ROOT / "ui" / "configuration_card.yaml"
+CARD = ROOT / "ui" / "mushroom-climate-card.yaml"
+STACK = ROOT / "ui" / "mushroom-room-stack.yaml"
 
 OFFICE = "climate.virtual_office_climate"
 OFFICE_HEAD = "climate.office_home_office"
@@ -279,6 +281,19 @@ async def test_pair_is_never_too_close_while_writing(
     assert pair(hass) == end
     assert seen
     assert all(cool - heat >= 2 for heat, cool in seen)
+
+
+def test_stack_sample_matches_the_card_and_block() -> None:
+    """The stack's climate card is the card sample, and its chips use the block's sensors."""
+    stack = yaml.safe_load(STACK.read_text())
+    chips, card = stack["cards"]
+    assert card == yaml.safe_load(CARD.read_text())
+    block = SAMPLE.read_text()
+    for chip in chips["chips"]:
+        (cond,) = chip["conditions"]
+        assert chip["chip"]["entity"] == cond["entity"]
+        if "occupancy" not in cond["entity"]:  # the block shows only the openings sensor
+            assert f"{cond['entity']} " in block
 
 
 def readme_import_urls() -> dict[str, str]:
