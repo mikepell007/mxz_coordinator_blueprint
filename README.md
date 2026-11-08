@@ -112,6 +112,9 @@ using doors and windows. An empty room's head cleans its coil first if it was
 cooling, unless **When a room is done or waiting** is Off. A sensor that is
 unavailable stops nothing.
 
+The room's card can show an open door or window, or an empty room: see **Doors,
+windows, and occupancy** under [UI components](#ui-components-optional).
+
 **Dry mode.** The heads' own Dry (dehumidify) mode is something you pick; the
 blueprint never selects it. With a room's **allow Dry mode** off (the default), a
 head put in Dry is taken out of it on the next run. Turn it on for a room and,
@@ -190,6 +193,9 @@ These give a room a thermostat-style card. The coordinator doesn't need them.
   room.
 - [ui/mushroom-climate-card.yaml](ui/mushroom-climate-card.yaml) is the card. It
   needs [Mushroom](https://github.com/piitaya/lovelace-mushroom), a custom card.
+- [ui/mushroom-room-stack.yaml](ui/mushroom-room-stack.yaml) is the same card with
+  a row of status chips above it (head offline, window open, room empty). Use it in
+  place of the plain card if you want the status in words.
 
 1. Import the thermostat blueprint:
 
@@ -236,6 +242,24 @@ the temperature control and off/auto:
   a Wi-Fi-off symbol; leave `icon` out of the card, or it replaces this. The
   thermostat's `head_online` attribute says the same for other cards. The coordinator
   doesn't use it.
+- **Doors, windows, and occupancy.** Add the room's doors and windows sensor to its
+  block as `open`, the same one as its slot in the automation, and `open_invert: true`
+  if that slot has Invert on. While it's on, the icon is an open window; inverted,
+  while it's off, the icon is a person with a slash for an empty room. Offline wins
+  over both. A sensor that is unknown or unavailable shows neither, as it stops
+  nothing in the automation. Set `open_invert` to match the slot: the thermostat
+  can't read the automation's setting, and a mismatch shows an empty room while it's
+  occupied. The icon follows the sensor straight away, while the automation waits
+  its open and close delays, so it can show open for a moment while the head still
+  runs. The `room_status` attribute is `offline`, `open`, `unoccupied`, or `ok`.
+- **Status in words.** [ui/mushroom-room-stack.yaml](ui/mushroom-room-stack.yaml)
+  puts a row of Mushroom chips above the same card: *Head offline*, *Window open*,
+  or *Room empty*, each shown only while it applies, so the row is empty when all
+  is well. It reads the sensors directly and needs no thermostat inputs. Set its
+  entities to the room's sensors. The chips have no invert setting; instead the
+  *Window open* chip shows while its sensor is on, and the *Room empty* chip while
+  its sensor is off. Keep the one that matches the room's Invert setting, or both if
+  the room has both kinds of sensor.
 
 The thermostat blueprint was tested on Home Assistant 2026.10.4. Earlier versions
 may not have template climate entities.

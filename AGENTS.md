@@ -16,7 +16,7 @@ when copying anything else from upstream.
 | `tests/test_room_climate.py` | Runs the room thermostat blueprint and the `ui/configuration_card.yaml` sample in the same kind of test instance. |
 | `mxz_helpers.yaml` | Example HA helpers: per-room targets and enables, `input_boolean.mxz_enable`, and `input_select.mxz_mode`. |
 | `blueprints/template/mxz_room_climate.yaml` | Optional: a template blueprint that makes one thermostat entity per room for dashboard cards. |
-| `ui/` | Samples for it: `configuration_card.yaml` (one room's `use_blueprint` block) and `mushroom-climate-card.yaml`. |
+| `ui/` | Samples for it: `configuration_card.yaml` (one room's `use_blueprint` block), `mushroom-climate-card.yaml`, and `mushroom-room-stack.yaml` (the same card under conditional status chips; a test checks the two cards match). |
 | `README.md` | User-facing setup and caveats. |
 | `CHANGELOG.md` | One entry per version, with the rules for choosing the number and upgrade steps for major versions. |
 | `LICENSE`, `NOTICE` | MIT for this repo; upstream's MIT notice and what was ported, at which commit. |
@@ -167,6 +167,13 @@ dwell 600 s, idle `off_after_clean` (upstream's `off_after_dry`) with 10 min coi
   binary_sensor turns it to `mdi:wifi-off` while off; otherwise it's
   `mdi:thermostat`, HA's climate default, so the icon is always set. `head_online` is
   true/false, or none without a sensor or while it's unknown. The coordinator ignores it.
+- **The icon is a priority list: offline, then open, then default.** Optional `open`
+  and `open_invert` inputs take the room slot's sensor and setting: on (off when
+  inverted) shows `mdi:window-open-variant` (`mdi:account-off` inverted), and
+  `room_status` is `offline`/`open`/`unoccupied`/`ok`. It reads the raw sensor: a
+  template blueprint can't see the automation's open and close delays, so don't try to
+  mirror `open`/`held`. The icon and `room_status` each work the status out, since
+  `this.attributes` would lag a render behind.
 - **Mushroom's bottom-bar switch is built in.** It appears when
   `show_temperature_control` and `hvac_modes` are both set. Keep `collapsible_controls`
   out: it hides the bar while the entity is off, so the room can't be turned back on.

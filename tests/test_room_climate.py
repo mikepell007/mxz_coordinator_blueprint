@@ -21,6 +21,8 @@ from homeassistant.setup import async_setup_component
 ROOT = Path(__file__).parent.parent
 BLUEPRINT = ROOT / "blueprints" / "template" / "mxz_room_climate.yaml"
 SAMPLE = ROOT / "ui" / "configuration_card.yaml"
+CARD = ROOT / "ui" / "mushroom-climate-card.yaml"
+STACK = ROOT / "ui" / "mushroom-room-stack.yaml"
 
 OFFICE = "climate.virtual_office_climate"
 OFFICE_HEAD = "climate.office_home_office"
@@ -32,9 +34,11 @@ DEN_ENABLE = "input_boolean.den_enable"
 DEN_HEAT_TO = "input_number.den_heat_to"
 DEN_COOL_TO = "input_number.den_cool_to"
 DEN_PING = "binary_sensor.den_head_ping"
+DEN_OPEN = "binary_sensor.den_openings"
 LOFT = "climate.loft_thermostat"
 LOFT_HEAT_TO = "input_number.loft_heat_to"
 LOFT_COOL_TO = "input_number.loft_cool_to"
+LOFT_OCCUPANCY = "binary_sensor.loft_occupancy"
 
 
 @pytest.fixture
@@ -61,6 +65,8 @@ async def climate_calls(hass: HomeAssistant) -> list[Event]:
     hass.states.async_set("sensor.office_motion_air_temperature_2", "72")
     hass.states.async_set("sensor.den_temperature", "71")
     hass.states.async_set(DEN_PING, "on")
+    hass.states.async_set(DEN_OPEN, "off")
+    hass.states.async_set(LOFT_OCCUPANCY, "on")
 
     assert await async_setup_component(hass, "climate", {})
     calls: list[Event] = []
@@ -72,6 +78,7 @@ async def climate_calls(hass: HomeAssistant) -> list[Event]:
         "use_blueprint": {"path": "mikepell007/mxz_room_climate.yaml", "input": {
             "head": DEN_HEAD, "sensor": "sensor.den_temperature", "enable": DEN_ENABLE,
             "heat_to": DEN_HEAT_TO, "cool_to": DEN_COOL_TO, "online": DEN_PING,
+            "open": DEN_OPEN,
         }},
         "name": "Den Thermostat",
         "unique_id": "den_thermostat",
@@ -80,6 +87,7 @@ async def climate_calls(hass: HomeAssistant) -> list[Event]:
         "use_blueprint": {"path": "mikepell007/mxz_room_climate.yaml", "input": {
             "head": DEN_HEAD, "sensor": "sensor.den_temperature", "enable": DEN_ENABLE,
             "heat_to": LOFT_HEAT_TO, "cool_to": LOFT_COOL_TO, "min_gap": 4,
+            "open": LOFT_OCCUPANCY, "open_invert": True,
         }},
         "name": "Loft Thermostat",
         "unique_id": "loft_thermostat",
@@ -134,6 +142,43 @@ async def test_no_online_sensor_keeps_the_usual_icon(hass: HomeAssistant, climat
     state = hass.states.get(OFFICE)
     assert state.attributes["icon"] == "mdi:thermostat"
     assert state.attributes["head_online"] is None
+    assert state.attributes["room_status"] == "ok"
+
+
+@pytest.mark.parametrize(
+    ("ping", "opening", "icon", "status"),
+    [
+        ("on", "off", "mdi:thermostat", "ok"),
+        ("on", "on", "mdi:window-open-variant", "open"),
+        ("off", "on", "mdi:wifi-off", "offline"),         # offline wins
+        ("on", "unavailable", "mdi:thermostat", "ok"),    # neither open nor closed
+        ("unavailable", "on", "mdi:window-open-variant", "open"),
+    ],
+)
+async def test_icon_shows_an_open_door_or_window(
+    hass: HomeAssistant, climate_calls, ping, opening, icon, status
+) -> None:
+    hass.states.async_set(DEN_PING, ping)
+    hass.states.async_set(DEN_OPEN, opening)
+    await hass.async_block_till_done()
+    state = hass.states.get(DEN)
+    assert state.attributes["icon"] == icon
+    assert state.attributes["room_status"] == status
+
+
+@pytest.mark.parametrize(
+    ("occupancy", "icon", "status"),
+    [("on", "mdi:thermostat", "ok"), ("off", "mdi:account-off", "unoccupied"),
+     ("unknown", "mdi:thermostat", "ok")],
+)
+async def test_inverted_sensor_shows_an_empty_room(
+    hass: HomeAssistant, climate_calls, occupancy, icon, status
+) -> None:
+    hass.states.async_set(LOFT_OCCUPANCY, occupancy)
+    await hass.async_block_till_done()
+    state = hass.states.get(LOFT)
+    assert state.attributes["icon"] == icon
+    assert state.attributes["room_status"] == status
 
 
 @pytest.mark.parametrize(
@@ -236,6 +281,19 @@ async def test_pair_is_never_too_close_while_writing(
     assert pair(hass) == end
     assert seen
     assert all(cool - heat >= 2 for heat, cool in seen)
+
+
+def test_stack_sample_matches_the_card_and_block() -> None:
+    """The stack's climate card is the card sample, and its chips use the block's sensors."""
+    stack = yaml.safe_load(STACK.read_text())
+    chips, card = stack["cards"]
+    assert card == yaml.safe_load(CARD.read_text())
+    block = SAMPLE.read_text()
+    for chip in chips["chips"]:
+        (cond,) = chip["conditions"]
+        assert chip["chip"]["entity"] == cond["entity"]
+        if "occupancy" not in cond["entity"]:  # the block shows only the openings sensor
+            assert f"{cond['entity']} " in block
 
 
 def readme_import_urls() -> dict[str, str]:
