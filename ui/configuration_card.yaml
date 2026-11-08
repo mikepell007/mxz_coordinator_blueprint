@@ -10,6 +10,9 @@ template:
         target: input_number.mxz_home_office_target
         # online: binary_sensor.office_head_ping   # optional: the head's Ping sensor
         # open: binary_sensor.office_openings      # optional: same as the room's slot
-        # open_invert: false                       # true for an occupancy sensor
+        # For an occupancy sensor, set this too. The automation's Invert checkbox
+        # doesn't carry over, so without it the icon shows an open window while
+        # the room is occupied.
+        # open_invert: true
     name: Virtual Office Climate
     unique_id: virtual_office_climate
